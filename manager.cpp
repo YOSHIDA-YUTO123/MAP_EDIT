@@ -28,6 +28,7 @@
 #include "imguimaneger.h"
 #include "MapObject.h"
 #include "EditMapObject.h"
+#include "DebugLog.h"
 
 using namespace Const;			// 名前空間Constを使用する
 using namespace std;			// 名前空間stdを使用する
@@ -43,10 +44,11 @@ CSound* CManager::m_pSound = nullptr;					// サウンドのポインタ
 int CManager::m_nFrameCounter = 0;						// フレームのカウンター
 bool CManager::m_bShowDebug = true;						// デバッグ表示をするかしないか
 CTextureManager* CManager::m_pTexture = nullptr;		// テクスチャクラスへのポインタ
-CCamera* CManager::m_pCamera = nullptr;				// カメラのポインタ
+CCamera* CManager::m_pCamera = nullptr;					// カメラのポインタ
 CLight* CManager::m_pLight = nullptr;					// カメラへのポインタ
 CModelManager* CManager::m_pModel = nullptr;			// モデルのクラスへのポインタ
-
+CDebugLog* CManager::m_pDebugLog = nullptr;				// デバッグログのクラスへのポインタ
+	
 //===================================================
 // コンストラクタ
 //===================================================
@@ -72,8 +74,8 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 	// レンダラーを生成
 	m_pRenderer = new CRenderer;
 
-	// サウンドの初期化処理
-	m_pSound = new CSound;
+	//// サウンドの初期化処理
+	//m_pSound = new CSound;
 
 	// キーボードを生成
 	m_pInputKeyboard = new CInputKeyboard;
@@ -87,8 +89,8 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 	// 初期化処理
 	if (FAILED(m_pRenderer->Init(hWnd, bWindow))) return E_FAIL;
 
-	// サウンドの初期化処理
-	if (FAILED(m_pSound->Init(hWnd))) return E_FAIL;
+	//// サウンドの初期化処理
+	//if (FAILED(m_pSound->Init(hWnd))) return E_FAIL;
 
 	// キーボードの初期化処理
 	if (FAILED(m_pInputKeyboard->Init(hInstance, hWnd))) return E_FAIL;
@@ -122,7 +124,12 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 	m_pLight->Init();
 	m_pLight->SetDirectional(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(0.0f, -1.0f, 0.0f), D3DXVECTOR3(0.0f, 100.0f, 0.0f));
 
-	CMeshField::Create(VEC3_NULL, 10, 20, D3DXVECTOR2(500.0f, 500.0f));
+	// デバッグログの生成
+ 	m_pDebugLog = CDebugLog::Create();
+
+	CMeshField::Create(VEC3_NULL, 1, 1, D3DXVECTOR2(2000.0f, 2000.0f));
+
+	CMeshDome::Create(VEC3_NULL, 8, 8, 10000.0f, 5000.0f);
 
 	// 結果を返す
 	return S_OK;
@@ -132,9 +139,6 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 //===================================================
 void CManager::Uninit(void)
 {
-	// すべてのサウンドの停止
-	m_pSound->StopSound();
-
 	// モデルの破棄
 	if (m_pModel != nullptr)
 	{
@@ -177,6 +181,9 @@ void CManager::Uninit(void)
 	// サウンドの破棄
 	if (m_pSound != nullptr)
 	{
+		// すべてのサウンドの停止
+		m_pSound->StopSound();
+
 		// キーボードの終了処理
 		m_pSound->Uninit();
 
@@ -353,6 +360,7 @@ CRenderer* CManager::GetRenderer(void)
 
 	return m_pRenderer;
 }
+
 //===================================================
 // キーボードの取得処理
 //===================================================
@@ -363,6 +371,7 @@ CInputKeyboard* CManager::GetInputKeyboard(void)
 
 	return m_pInputKeyboard;
 }
+
 //===================================================
 // パッドの取得処理
 //===================================================
@@ -373,6 +382,7 @@ CInputJoypad* CManager::GetInputJoypad(void)
 
 	return m_pInputJoypad;
 }
+
 //===================================================
 // マウスの取得処理
 //===================================================
@@ -383,6 +393,7 @@ CInputMouse* CManager::GetInputMouse(void)
 
 	return m_pInputMouse;
 }
+
 //===================================================
 // サウンドの取得処理
 //===================================================

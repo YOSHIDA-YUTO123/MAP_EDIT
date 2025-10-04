@@ -58,7 +58,7 @@ CMeshDome* CMeshDome::Create(const D3DXVECTOR3 pos, const int nSegH, const int n
 	// 頂点数の設定
 	int nNumFanVtx = nSegH + 2;
 
-	int nNumIdxFan = nNumFanVtx;
+	int nNumIdxFan = 3 * (nSegH + 1);
 
 	// 頂点数の設定
 	int nNumDomeVtx = (nSegH + 1) * (nSegV + 1);
@@ -131,7 +131,7 @@ HRESULT CMeshDome::Init(void)
 	SetDome(m_nSegH, m_nSegV, m_fRadius, m_fHeight);
 
 	// テクスチャのIDの設定
-	SetTextureID("sky.jpg");
+	SetTextureID("sky000.jpg");
 
 	return S_OK;
 }
@@ -177,8 +177,6 @@ void CMeshDome::Draw(void)
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
 	pDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
-
-	pDevice->SetRenderState(D3DRS_CULLMODE, TRUE);
 
 	int nSegH = m_nSegH;
 	int nSegV = m_nSegV;
@@ -242,8 +240,6 @@ void CMeshDome::Draw(void)
 	//ポリゴンの描画
 	pDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, 0, nNumDomeVtx, m_nOffsetIdx, nNumDomePolygon);
 
-	pDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-
 	pDevice->SetRenderState(D3DRS_LIGHTING, TRUE);
 }
 
@@ -255,8 +251,8 @@ void CMeshDome::SetDome(const int nSegH, const int nSegV, const float fRadius, c
 	int nCntVtx = 0;
 
 	// テクスチャのオフセット
-	float fTexX = 0.5f / nSegH;
-	float fTexY = 0.5f / nSegV;
+	float fTexX = 1.0f / nSegH;
+	float fTexY = 1.0f / nSegV;
 
 	float fNowRadius = fRadius / (nSegV + 1);
 
@@ -286,12 +282,9 @@ void CMeshDome::SetDome(const int nSegH, const int nSegV, const float fRadius, c
 
 		D3DXVECTOR3 posWk = VEC3_NULL;
 
-		posWk.x = sinf(fAngle) * fNowRadius;
+		posWk.x = cosf(fAngle) * fNowRadius;
 		posWk.y = fHeight;
-		posWk.z = cosf(fAngle) * fNowRadius;
-
-		float u = 0.5f + 0.5f * cosf(fAngle);
-		float v = 0.5f + 0.5f * sinf(fAngle);
+		posWk.z = sinf(fAngle) * fNowRadius;
 
 		// 頂上の座標の設定
 		pVtx[nCntVtx].pos = posWk;
@@ -303,7 +296,7 @@ void CMeshDome::SetDome(const int nSegH, const int nSegV, const float fRadius, c
 		pVtx[nCntVtx].col = WHITE;
 
 		// テクスチャ座標の設定
-		pVtx[nCntVtx].tex = D3DXVECTOR2(u, v);
+		pVtx[nCntVtx].tex = D3DXVECTOR2(fTexX * nCntX, 0.0f);
 
 		nCntVtx++;
 	}
@@ -423,7 +416,7 @@ void CMeshDome::SetTextureID(const char* pTextureName)
 	CTextureManager* pTexture = CManager::GetTexture();
 
 	// ファイルパス
-	string filePath = "data/TEXTURE/sky/";
+	string filePath = "data/TEXTURE/";
 
 	// 文字列の連結
 	filePath += pTextureName;

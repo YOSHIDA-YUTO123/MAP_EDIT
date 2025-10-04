@@ -160,7 +160,7 @@ void CObjectX::Draw(void)
 }
 
 //===================================================
-// 描画処理(オーバーロード)
+// 描画処理(オーバーロード)透明度変更
 //===================================================
 void CObjectX::Draw(const float Diffuse)
 {
@@ -216,6 +216,78 @@ void CObjectX::Draw(const float Diffuse)
 		D3DXMATERIAL Mat = pMat[nCntMat];
 
 		Mat.MatD3D.Diffuse.a = Diffuse;
+
+		// マテリアルの設定
+		pDevice->SetMaterial(&Mat.MatD3D);
+
+		// テクスチャの設定
+		pDevice->SetTexture(0, pTexture->GetAdress(modelInfo.nTextureIdx[nCntMat]));
+
+		// モデル(パーツ)の描画
+		modelInfo.pMesh->DrawSubset(nCntMat);
+	}
+
+	//保存していたマテリアルを元に戻す
+	pDevice->SetMaterial(&matDef);
+}
+
+//===================================================
+// 描画処理(オーバーロード)色変更
+//===================================================
+void CObjectX::Draw(const D3DXCOLOR Diffuse)
+{
+	// デバイスの取得
+	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
+
+	// テクスチャクラスの取得
+	CTextureManager* pTexture = CManager::GetTexture();
+
+	// モデルクラスの取得
+	CModelManager* pModel = CManager::GetModel();
+
+	//計算用のマトリックス
+	D3DXMATRIX mtxRot, mtxTrans, mtxScal, mtxParent;
+
+	D3DMATERIAL9 matDef;//現在のマテリアル保存用
+
+	D3DXMATERIAL* pMat;//マテリアルデータへのポインタ
+
+	//ワールドマトリックスの初期化
+	D3DXMatrixIdentity(&m_mtxWorld);
+
+	//向きを反映
+	D3DXMatrixRotationYawPitchRoll(&mtxRot, m_rot.y, m_rot.x, m_rot.z);
+	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxRot);
+
+	//位置を反映
+	D3DXMatrixTranslation(&mtxTrans, m_pos.x, m_pos.y, m_pos.z);
+	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxTrans);
+
+	//ワールドマトリックスの設定
+	pDevice->SetTransform(D3DTS_WORLD, &m_mtxWorld);
+
+	//現在のマテリアルを取得
+	pDevice->GetMaterial(&matDef);
+
+	if (m_nModelIdx == -1)
+	{
+		//保存していたマテリアルを元に戻す
+		pDevice->SetMaterial(&matDef);
+
+		return;
+	}
+
+	// モデルの情報の取得
+	CModelManager::ModelInfo modelInfo = pModel->GetModelInfo(m_nModelIdx);
+
+	//マテリアルのデータへのポインタを取得
+	pMat = (D3DXMATERIAL*)modelInfo.pBuffMat->GetBufferPointer();
+
+	for (int nCntMat = 0; nCntMat < (int)modelInfo.dwNumMat; nCntMat++)
+	{
+		D3DXMATERIAL Mat = pMat[nCntMat];
+
+		Mat.MatD3D.Diffuse = Diffuse;
 
 		// マテリアルの設定
 		pDevice->SetMaterial(&Mat.MatD3D);

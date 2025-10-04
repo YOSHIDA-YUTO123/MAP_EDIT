@@ -20,6 +20,8 @@
 #include <fstream>
 #include "math.h"
 #include "imgui_internal.h"
+#include "DebugLog.h"
+#include "camera.h"
 
 // jsonの使用
 using json = nlohmann::json;
@@ -135,10 +137,23 @@ void CMapObjectManager::Update(void)
 	// モデルのパスのリストの表示
 	SetModelPathList();
 
+	// 配置モードかどうか
+	static bool bSetMode = true;
+
+	SetCamerafocus(bSetMode);
+
+	if (ImGui::RadioButton(u8"オブジェクトを平面で移動させる", m_bDragMoveXZ))
+	{
+		// 状態の切り替え
+		m_bDragMoveXZ = m_bDragMoveXZ ? false : true;
+	}
+
 	if (ImGui::BeginTabBar("test0000"))
 	{
 		if (ImGui::BeginTabItem(u8"配置"))
 		{
+			bSetMode = true;
+
 			if (m_pEditMapObj != nullptr)
 			{
 				// 表示する
@@ -156,6 +171,7 @@ void CMapObjectManager::Update(void)
 
 		if (ImGui::BeginTabItem(u8"配置オブジェクト設定"))
 		{
+			bSetMode = false;
 			if (m_pEditMapObj != nullptr)
 			{
 				// 表示しない
@@ -191,12 +207,39 @@ void CMapObjectManager::Update(void)
 	
 	if (ImGui::Button(u8"セーブする"))
 	{
-		Save();
+		int nID = MessageBox(NULL, "配置情報のセーブ", "セーブしますか ?", MB_YESNO);
+
+		if (nID == IDYES)
+		{
+			// デバッグログの取得
+			CDebugLog *pDebugLog = CManager::GetDebugLog();
+
+			if (pDebugLog != nullptr)
+			{
+				pDebugLog->Set(u8"セーブ完了!!!", 120);
+			}
+			// セーブ
+			Save();
+		}
 	}
 
 	if (ImGui::Button(u8"ロード"))
 	{
-		Load();
+		int nID = MessageBox(NULL, "ステージのロード", "ロードしますか ?", MB_YESNO);
+
+		if (nID == IDYES)
+		{
+			// デバッグログの取得
+			CDebugLog* pDebugLog = CManager::GetDebugLog();
+
+			if (pDebugLog != nullptr)
+			{
+				pDebugLog->Set(u8"ロード完了!!!", 120);
+			}
+
+			// ロード
+			Load();
+		}
 	}
 
 	// 終了処理
@@ -208,6 +251,7 @@ void CMapObjectManager::Update(void)
 //===================================================
 CMapObjectManager::CMapObjectManager()
 {
+	m_bDragMoveXZ = false;
 	m_pSelect = nullptr;
 	m_nType = 0;
 	m_pEditMapObj = nullptr;
@@ -252,7 +296,7 @@ void CMapObjectManager::SetModelPathList(void)
 {
 	if (m_aModelPath.empty()) return;
 
-	if (ImGui::BeginCombo(u8"モデルのリスト", m_aModelPath[m_nType].c_str()))
+	if (ImGui::BeginCombo(u8"モデルの種類", m_aModelPath[m_nType].c_str()))
 	{
 		int nCnt = 0;
 
@@ -346,7 +390,7 @@ void CMapObjectManager::UpdateEditMapObj(void)
 		rot.z = Wrap(rot.z, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI));
 	}
 
-	if (ImGui::Button(u8"生成") || pKeyboard->GetTrigger(DIK_RETURN))
+	if (ImGui::Button(u8"オブジェクトを生成",ImVec2(300.0,0)) || pKeyboard->GetTrigger(DIK_RETURN))
 	{
 		// モデルの生成
 		Create(pos, D3DXToRadian(rot), m_aModelPath[m_nType].c_str());
@@ -649,6 +693,38 @@ void CMapObjectManager::SetFilePath(void)
 		{
 			m_aModelPath.push_back(modellist.filepath);
 		}
+	}
+}
+
+//===================================================
+// カメラのフォーカス
+//===================================================
+void CMapObjectManager::SetCamerafocus(const bool bMode)
+{
+	if (ImGui::Button(u8"カメラを選択モデルにフォーカス"))
+	{
+		D3DXVECTOR3 selectPos = { 0.0f,0.0f,0.0f };
+
+		if (m_pSelect != nullptr)
+		{
+			// 位置の取得
+			selectPos = m_pSelect->GetPosition();
+		}
+
+		D3DXVECTOR3 gostPos = m_pEditMapObj->GetPosition();
+
+		D3DXVECTOR3 pos = bMode ? gostPos : selectPos;
+
+		// カメラの取得
+		CCamera* pCamera = CManager::GetCamera();
+
+		// nullだったら処理しない
+		if (pCamera == nullptr)return;
+
+		pCamera->SetPosV(pos);
+		pCamera->SetPosR(pos);
+		pCamera->UpdatePositionV();
+		pCamera->UpdatePositionR();
 	}
 }
 

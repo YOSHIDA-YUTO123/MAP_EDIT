@@ -16,6 +16,7 @@
 #include "math.h"
 #include "imgui.h"
 #include "input.h"
+#include "MapObjectManager.h"
 
 //===================================================
 // コンストラクタ
@@ -317,9 +318,23 @@ void CMapObject::SetMouseDrag(void)
 		D3DXVECTOR3 camRight(view._11, view._21, view._31);
 		D3DXVECTOR3 camUp(view._12, view._22, view._32);
 
-		// 移動量の設定
-		D3DXVECTOR3 move = camRight * MouseMove.x + camUp * -MouseMove.y;
+		D3DXVECTOR3 move;
 
+		// ドラッグの状態が平面移動だったら
+		if (CMapObjectManager::GetInstance()->GetDragMoveState())
+		{
+			// XZ平面での移動
+			camUp = D3DXVECTOR3(0.0f, 0.0f, 0.0f); // 上方向は無効化
+			D3DXVECTOR3 forward = D3DXVECTOR3(view._13, 0.0f, view._33);
+			D3DXVec3Normalize(&forward, &forward);
+
+			move = camRight * MouseMove.x + forward * -MouseMove.y;
+		}
+		else
+		{
+			// 通常のカメラ基準移動
+			move = camRight * MouseMove.x + camUp * -MouseMove.y;
+		}
 		// 位置の更新
 		m_pos += move;
 	}

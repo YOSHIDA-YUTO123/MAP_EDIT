@@ -56,6 +56,12 @@ public:
 
 	HRESULT Init(void);
 	void Update(void);
+
+	/// <summary>
+	/// ドラッグ移動の状態の取得
+	/// </summary>
+	/// <returns>判定結果</returns>
+	bool GetDragMoveState(void) const { return m_bDragMoveXZ; }
 private:
 	CMapObjectManager();
 
@@ -71,6 +77,7 @@ private:
 	void Load(void);
 	void Erase(CMapObject* pObj);
 	void SetFilePath(void);
+	void SetCamerafocus(const bool bMode);
 
 	static std::unique_ptr<CMapObjectManager> m_pInstance; // 自分のインスタンス
 	static std::vector<CMapObject*> m_pMapObjectList;	   // マップオブジェクトのリスト
@@ -78,6 +85,7 @@ private:
 	CEditMapObject* m_pEditMapObj;						   // 編集用マップオブジェクト
 	CMapObject* m_pSelect;								   // 選択中のマップオブジェクト
 	int m_nType;										   // モデルの種類
+	bool m_bDragMoveXZ;									   // ドラッグ移動をXZ平面にするか
 };
 
 #endif

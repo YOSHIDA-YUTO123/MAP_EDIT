@@ -132,7 +132,7 @@ HRESULT CMeshField::Init(void)
 	}
 
 	// テクスチャのIDの設定
-	SetTextureID("field.jpg");
+	SetTextureID("field.png");
 
 	// 頂点のカウント
 	int nCntVtx = 0;
@@ -725,7 +725,7 @@ void CMeshField::SetTextureID(const char* pTextureName)
 	CTextureManager* pTexture = CManager::GetTexture();
 
 	// ファイルパス
-	string filePath = "data/TEXTURE/field/";
+	string filePath = "data/TEXTURE/";
 
 	// 文字列の連結
 	filePath += pTextureName;

@@ -30,6 +30,7 @@ class CTextureManager;
 class CLight;
 class CModelManager;
 class CCamera;
+class CDebugLog;
 
 //***************************************************
 // マネージャークラスの定義
@@ -56,6 +57,8 @@ public:
 	static CCamera* GetCamera(void) { return m_pCamera; }
 	static CLight* GetLight(void);
 	static CModelManager* GetModel(void);
+	static CDebugLog* GetDebugLog(void) { return m_pDebugLog; }
+
 private:
 	static CRenderer* m_pRenderer;				// レンダラーのポインタ
 	static CInputKeyboard* m_pInputKeyboard;	// キーボードのポインタ
@@ -66,6 +69,7 @@ private:
 	static CCamera* m_pCamera;					// カメラのポインタ
 	static CLight* m_pLight;					// ライトへのポインタ
 	static CModelManager* m_pModel;				// モデルクラスへのポインタ
+	static CDebugLog* m_pDebugLog;				// デバッグログのクラスへのポインタ
 	static int m_nFrameCounter;					// フレームカウンター
 	static bool m_bShowDebug;					// デバッグ表示をするかしないか
 	int m_fps;									// fps格納用変数

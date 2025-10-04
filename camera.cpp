@@ -24,7 +24,7 @@ using namespace Const; // 名前空間Constを使用
 namespace
 {
 	constexpr float MAX_VIEW_TOP = 2.90f;	// カメラの制限(上)
-	constexpr float MAX_VIEW_BOTTOM = D3DX_PI * 0.45f; // カメラの制限(下)
+	constexpr float MAX_VIEW_BOTTOM = 0.0f; // カメラの制限(下)
 	constexpr float HEIGHT_OFFSET = 20.0f;	// カメラの高さのオフセット
 	constexpr float ROCKON_HEIGHT = 200.0f;	// ロックオンの時のカメラの高さ
 	constexpr float FOV_BASE = 45.0f;		// 視野角ベース
@@ -190,6 +190,9 @@ void CCamera::MouseWheel(void)
 	{
 		m_fDistance -= WHEEL_ZOOM;
 	}
+	
+	// 範囲の制限
+	m_fDistance = Clamp(m_fDistance, 5.0f, 999999.0f);
 
 	// 視点の更新処理
 	UpdatePositionV();

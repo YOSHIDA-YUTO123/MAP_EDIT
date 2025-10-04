@@ -16,6 +16,7 @@
 #include "math.h"
 #include "renderer.h"
 #include "imguimaneger.h"
+#include "MapObjectManager.h"
 
 //===================================================
 // コンストラクタ
@@ -95,6 +96,12 @@ void CEditMapObject::Uninit(void)
 //===================================================
 void CEditMapObject::Update(void)
 {
+	// キーボードの取得
+	CInputKeyboard* pKeyboard = CManager::GetInputKeyboard();
+
+	// 視点の操作をしているときに処理しない
+	if (pKeyboard->GetPress(DIK_LALT)) return;
+
 	// 位置の取得
 	D3DXVECTOR3 pos = CObjectX::GetPosition();
 
@@ -146,8 +153,22 @@ void CEditMapObject::Update(void)
 		D3DXVECTOR3 camRight(view._11, view._21, view._31);
 		D3DXVECTOR3 camUp(view._12, view._22, view._32);
 
-		// 移動量の設定
-		D3DXVECTOR3 move = camRight * MouseMove.x + camUp * -MouseMove.y;
+		D3DXVECTOR3 move;
+
+		if (CMapObjectManager::GetInstance()->GetDragMoveState())
+		{
+			// XZ平面での移動
+			camUp = D3DXVECTOR3(0.0f, 0.0f, 0.0f); // 上方向は無効化
+			D3DXVECTOR3 forward = D3DXVECTOR3(view._13, 0.0f, view._33);
+			D3DXVec3Normalize(&forward, &forward);
+
+			move = camRight * MouseMove.x + forward * -MouseMove.y;
+		}
+		else
+		{
+			// 通常のカメラ基準移動
+			move = camRight * MouseMove.x + camUp * -MouseMove.y;
+		}
 
 		// 位置の更新
 		pos += move;
@@ -165,7 +186,7 @@ void CEditMapObject::Draw(void)
 	if (m_bShow)
 	{
 		// 描画処理
-		CObjectX::Draw(0.5f);
+		CObjectX::Draw(D3DXCOLOR(0.4f,1.0f,1.0f,0.5f));
 	}
 }
 

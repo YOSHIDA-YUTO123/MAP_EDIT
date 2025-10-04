@@ -34,6 +34,7 @@ public:
 	virtual void Draw(void) override;
 	
 	void Draw(const float Diffuse); // 透明度を変更できる描画処理
+	void Draw(const D3DXCOLOR Diffuse); // 色を変更できる描画処理
 	void DrawShadow(void);
 	void SetUpMatrix(const D3DXVECTOR3 Scal = D3DXVECTOR3(1.0f,1.0f,1.0f));
 	void SetUpMatrix(const D3DXMATRIX mtxRot, const D3DXMATRIX mtxTrans,const D3DXVECTOR3 Scal = D3DXVECTOR3(1.0f, 1.0f, 1.0f));
