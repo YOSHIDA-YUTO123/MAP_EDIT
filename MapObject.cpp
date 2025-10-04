@@ -35,16 +35,18 @@ CMapObject::CMapObject()
 //===================================================
 CMapObject::~CMapObject()
 {
+	m_aModelPath.clear();
 }
 
 //===================================================
 // 生成処理
 //===================================================
-CMapObject* CMapObject::Create(const D3DXVECTOR3 pos,const char *pModelFileName)
+CMapObject* CMapObject::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot,const char *pModelFileName)
 {
 	CMapObject* pMapObject = new CMapObject;
 
 	pMapObject->m_pos = pos;
+	pMapObject->m_rot = rot;
 
 	// 番号の登録
 	pMapObject->Register(pModelFileName);
@@ -172,6 +174,9 @@ void CMapObject::Register(const char* pModelFileName)
 
 	// インデックスの登録
 	m_nModelIdx = pModel->Register(pModelFileName);
+
+	// モデルのパスの設定
+	m_aModelPath = pModelFileName;
 }
 
 //===================================================
@@ -241,7 +246,22 @@ bool CMapObject::CollisionMouse(float* pDistance)
 void CMapObject::SetInfo(void)
 {
 	// 情報の設定
-	ImGui::DragFloat3("", m_pos, 0.5f);
+	ImGui::DragFloat3(u8"位置", m_pos, 0.5f);
+
+	D3DXVECTOR3 rot = D3DXToDegree(m_rot);
+
+	// 情報の設定
+	if (ImGui::DragFloat3(u8"向き", rot, 0.5f, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI)))
+	{
+		// 範囲内をループ
+		rot.x = Wrap(rot.x, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI));
+		rot.y = Wrap(rot.y, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI));
+		rot.z = Wrap(rot.z, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI));
+	}
+	
+	
+	// 角度を設定
+	m_rot = D3DXToRadian(rot);
 }
 
 //===================================================

@@ -55,9 +55,6 @@ HRESULT CModel::Init(const char* pModelName)
 	// モデルクラスの取得
 	CModelManager* pModel = CManager::GetModel();
 
-	// テクスチャクラスの取得
-	CTextureManager* pTexture = CManager::GetTexture();
-
 	// モデルマネージャークラスの取得
 	CModelManager* pModelManager = CManager::GetModel();
 

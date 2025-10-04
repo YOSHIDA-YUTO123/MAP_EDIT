@@ -15,6 +15,7 @@
 #include "imgui.h"
 #include "math.h"
 #include "renderer.h"
+#include "imguimaneger.h"
 
 //===================================================
 // コンストラクタ

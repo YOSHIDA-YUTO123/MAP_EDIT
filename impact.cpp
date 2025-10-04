@@ -276,9 +276,6 @@ void CMeshCircle::Update(void)
 	m_fInRadius += m_fSpeed;
 	m_fOutRadius += m_fSpeed;
 
-	// 頂点のy座標
-	float fHeight = 0.0f;
-
 	VERTEX_3D* pVtx = NULL;
 
 	// 頂点バッファをロック

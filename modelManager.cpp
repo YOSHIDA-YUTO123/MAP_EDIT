@@ -15,6 +15,9 @@
 #include "LoadManager.h"
 #include <cassert>
 #include "textureManager.h"
+#include "json.hpp"
+
+using json = nlohmann::json; // jsonを使用
 
 using namespace Const;		// 名前空間Constを使用する
 using namespace std;		// 名前空間stdを使用する
@@ -115,6 +118,12 @@ CModelManager::ModelInfo CModelManager::GetModelInfo(const int nIdx)
 	// モデルの数
 	int nNumModel = static_cast<int>(m_apModelInfo.size());
 
+	if (m_apModelInfo.empty())
+	{
+		MessageBox(NULL, "モデルが読み込まれていません", "モデルを登録してください",MB_OK);
+		return ModelInfo();
+	}
+
 	if (nIdx < 0 || nIdx >= nNumModel)
 	{
 		assert(false && "インデックスオーバーModelInfo");
@@ -122,6 +131,39 @@ CModelManager::ModelInfo CModelManager::GetModelInfo(const int nIdx)
 	}
 
 	return m_apModelInfo[nIdx];
+}
+
+//==============================================
+// リストの書き出し処理
+//==============================================
+void CModelManager::SaveList(void)
+{
+	json modelInfo;
+
+	// 要素を調べる
+	for (auto& list : m_apModelInfo)
+	{
+		json config =
+		{
+			{"file_name",list.filepath}
+		};
+
+		modelInfo["MODEL_INFO"].push_back(config);
+	}
+
+	// ファイルを開く
+	ofstream file(JSON_FILE);
+
+	if (file.is_open())
+	{
+		file << modelInfo.dump(4);
+		file.clear();
+		file.close();
+	}
+	else
+	{
+		MessageBox(NULL, "ファイルが開けません", JSON_FILE, MB_OK | MB_ICONWARNING);
+	}
 }
 
 //==============================================
@@ -220,9 +262,7 @@ void CModelManager::SetMaterial(ModelInfo* pModelInfo)
 //==============================================
 HRESULT CModelManager::Load(void)
 {
-	// デバイスの取得
-	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
-
+#if 0
 	// ファイルを開く
 	fstream file("data/TXT/Modellist.txt");
 	string line, input;
@@ -273,6 +313,34 @@ HRESULT CModelManager::Load(void)
 	}
 
 	return S_OK;
+#else
+	// ファイルを開く
+	ifstream file(JSON_FILE);
+
+	json config;
+
+	if (file.is_open())
+	{
+		file >> config;
+		file.clear();
+		file.close();
+	}
+	else
+	{
+		MessageBox(NULL, "ファイルが開けません", JSON_FILE, MB_OK | MB_ICONWARNING);
+		return E_FAIL;
+	}
+
+	for (auto& info : config["MODEL_INFO"])
+	{
+		string filePath = info["file_name"];
+
+		// モデルの登録
+		Register(filePath.c_str());
+	}
+
+	return S_OK;
+#endif // 0
 }
 
 //==============================================
@@ -280,6 +348,9 @@ HRESULT CModelManager::Load(void)
 //==============================================
 void CModelManager::UnLoad(void)
 {
+	// リストのセーブ
+	SaveList();
+
 	// すべてのモデルのクリア
 	for (auto itr = m_apModelInfo.begin(); itr != m_apModelInfo.end(); itr++)
 	{

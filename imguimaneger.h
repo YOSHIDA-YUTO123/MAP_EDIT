@@ -46,6 +46,13 @@ public:
 	void NewFrame(void);
 	void EndFrame(void) { ImGui::EndFrame(); }
 	void End(void) { ImGui::End(); }
+
+	/// <summary>
+	/// IMGUIのウィンドウを操作しているか
+	/// </summary>
+	/// <param name=""></param>
+	/// <returns>判定結果</returns>
+	bool GetActiveWindow(void);
 private:
 };
 

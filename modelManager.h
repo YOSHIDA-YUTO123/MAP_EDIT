@@ -43,6 +43,9 @@ public:
 	HRESULT Load(void);
 	void UnLoad(void);
 private:
+	const char* JSON_FILE = "data/model_list.json"; // Žg—p‚·‚éjsonFIle
+
+	void SaveList(void);
 	void SetSize(ModelInfo* pModelInfo);
 	void SetMaterial(ModelInfo* pModelInfo);
 

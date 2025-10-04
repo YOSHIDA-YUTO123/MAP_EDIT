@@ -16,11 +16,19 @@
 #include "modelManager.h"
 #include "input.h"
 #include "EditMapObject.h"
+#include "json.hpp"
+#include <fstream>
+#include "math.h"
+#include "imgui_internal.h"
+
+// jsonの使用
+using json = nlohmann::json;
 
 //***************************************************
 // 定数宣言
 //***************************************************
 constexpr int MAX_WORD = 256; // 最大の文字数
+const char* JSON_FILE = "data/stage000.json"; // 使用するjsonファイル
 
 //***************************************************
 // 静的メンバ変数
@@ -48,10 +56,10 @@ CMapObjectManager* CMapObjectManager::GetInstance(void)
 //===================================================
 // マップオブジェクトの生成処理
 //===================================================
-CMapObject* CMapObjectManager::Create(const D3DXVECTOR3 pos, const char* pModelFileName)
+CMapObject* CMapObjectManager::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, const char* pModelFileName)
 {
 	// マップオブジェクトの生成
-	CMapObject* pMapObject = CMapObject::Create(pos, pModelFileName);
+	CMapObject* pMapObject = CMapObject::Create(pos, rot, pModelFileName);
 
 	if (pMapObject == nullptr)
 	{
@@ -106,14 +114,23 @@ void CMapObjectManager::Update(void)
 
 	// ウィンドウの設定
 	pImgui->SetPosition(ImVec2(0.0f, 0.0f));
-	pImgui->SetSize(ImVec2(300.0f, 200.0f));
+	pImgui->SetSize(ImVec2(400.0f, 500.0f));
 	pImgui->Start("aaa", CImGuiManager::TYPE_NOMOVEANDSIZE);
+
+	// キーボードの取得
+	CInputMouse* pMouse = CManager::GetInputMouse();
+
+	// キーボードの取得
+	CInputKeyboard* pKeyboard = CManager::GetInputKeyboard();
 
 	// モデルのパスの取得
 	GetModelPath();
 
 	// モデルのパスの登録
 	Register();
+
+	// ファイルパスの設定
+	SetFilePath();
 
 	// モデルのパスのリストの表示
 	SetModelPathList();
@@ -128,13 +145,16 @@ void CMapObjectManager::Update(void)
 				m_pEditMapObj->SetShow(true);
 			}
 
+			// 選択しない
+			m_pSelect = nullptr;
+
 			// 編集用オブジェとの更新処理
 			UpdateEditMapObj();
 
 			ImGui::EndTabItem();
 		}
 
-		if (ImGui::BeginTabItem(u8"インスペクター"))
+		if (ImGui::BeginTabItem(u8"配置オブジェクト設定"))
 		{
 			if (m_pEditMapObj != nullptr)
 			{
@@ -142,11 +162,11 @@ void CMapObjectManager::Update(void)
 				m_pEditMapObj->SetShow(false);
 			}
 
-			// 選択中のモデルの処理
-			SetSelectObj();
-
 			// モデルのインスペクター
 			SetInspector();
+
+			// 選択中のオブジェクトの処理
+			UpdateSelectObj();
 
 			ImGui::EndTabItem();
 		}
@@ -155,16 +175,11 @@ void CMapObjectManager::Update(void)
 		ImGui::EndTabBar();
 	}
 
-	// キーボードの取得
-	CInputMouse* pMouse = CManager::GetInputMouse();
-
-	// キーボードの取得
-	CInputKeyboard* pKeyboard = CManager::GetInputKeyboard();
-
-	ImGuiIO& io = ImGui::GetIO();
+	// 選択中のモデルの処理
+	SetSelectObjAlv();
 	
 	// IMGUIのウィンドウを操作していないなら
-	if (!io.WantCaptureMouse && ImGui::IsMouseClicked(0))
+	if (!pImgui->GetActiveWindow())
 	{
 		// 左クリックを押したら&&視点操作をしていないなら
 		if (pMouse->OnMouseTriggerDown(CInputMouse::LEFT) && !pKeyboard->GetPress(DIK_LALT))
@@ -172,6 +187,16 @@ void CMapObjectManager::Update(void)
 			// マウスとの当たり判定
 			CollisionMouse();
 		}
+	}
+	
+	if (ImGui::Button(u8"セーブする"))
+	{
+		Save();
+	}
+
+	if (ImGui::Button(u8"ロード"))
+	{
+		Load();
 	}
 
 	// 終了処理
@@ -256,7 +281,7 @@ void CMapObjectManager::SetModelPathList(void)
 //===================================================
 // 選択中のモデルの処理
 //===================================================
-void CMapObjectManager::SetSelectObj(void)
+void CMapObjectManager::SetSelectObjAlv(void)
 {
 	// 要素を調べる
 	for (auto itr = m_pMapObjectList.begin(); itr != m_pMapObjectList.end(); itr++)
@@ -275,18 +300,6 @@ void CMapObjectManager::SetSelectObj(void)
 			(*itr)->SetALv(1.0f);
 		}
 	}
-
-	// 選択されていないなら処理しない
-	if (m_pSelect == nullptr) return;
-
-	// キーボードの取得
-	CInputKeyboard* pKeyboard = CManager::GetInputKeyboard();
-
-	// 視点操作をしていないなら
-	if (!pKeyboard->GetPress(DIK_LALT))
-	{
-		m_pSelect->SetMouseDrag();
-	}
 }
 
 //===================================================
@@ -296,6 +309,7 @@ void CMapObjectManager::SetInspector(void)
 {
 	if (m_pSelect != nullptr)
 	{
+		// 情報の設定
 		m_pSelect->SetInfo();
 	}
 }
@@ -308,23 +322,41 @@ void CMapObjectManager::UpdateEditMapObj(void)
 	// nullなら処理しない
 	if (m_pEditMapObj == nullptr) return;
 
+	// 要素がないなら処理しない
+	if (m_aModelPath.empty()) return;
+
 	// 編集用モデルの位置の取得
 	D3DXVECTOR3 pos = m_pEditMapObj->GetPosition();
+
+	// 編集用モデルの向きの取得
+	D3DXVECTOR3 rot = D3DXToDegree(m_pEditMapObj->GetRotation());
 
 	// キーボードの取得
 	CInputKeyboard* pKeyboard = CManager::GetInputKeyboard();
 
+	// 位置の情報
+	ImGui::DragFloat3(u8"位置", pos, 0.5f);
+
+	// 情報の設定
+	if (ImGui::DragFloat3(u8"向き", rot, 0.5f, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI)))
+	{
+		// 範囲内をループ
+		rot.x = Wrap(rot.x, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI));
+		rot.y = Wrap(rot.y, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI));
+		rot.z = Wrap(rot.z, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI));
+	}
+
 	if (ImGui::Button(u8"生成") || pKeyboard->GetTrigger(DIK_RETURN))
 	{
 		// モデルの生成
-		Create(pos, m_aModelPath[m_nType].c_str());
+		Create(pos, D3DXToRadian(rot), m_aModelPath[m_nType].c_str());
 	}
-
-	// 位置の情報
-	ImGui::DragFloat3("", pos, 0.5f);
 
 	// 位置の設定
 	m_pEditMapObj->SetPosition(pos);
+
+	// 向きの設定
+	m_pEditMapObj->SetRotation(D3DXToRadian(rot));
 
 	// モデルの種類の設定
 	m_pEditMapObj->LoadModel(m_aModelPath[m_nType].c_str());
@@ -429,9 +461,195 @@ HRESULT CMapObjectManager::Register(void)
 				return E_FAIL;
 			}
 		}
+
+		m_aModelPath.push_back(modelPath);
 	}
 
 	return S_OK;
+}
+
+//===================================================
+// 選択中のオブジェクトの更新処理
+//===================================================
+void CMapObjectManager::UpdateSelectObj(void)
+{
+	// 選択されていないなら処理しない
+	if (m_pSelect == nullptr) return;
+
+	// 要素がないなら処理しない
+	if (m_aModelPath.empty()) return;
+
+	// キーボードの取得
+	CInputKeyboard* pKeyboard = CManager::GetInputKeyboard();
+
+	// Imguiの取得処理
+	CImGuiManager* pImgui = CManager::GetRenderer()->GetImGui();
+
+	// 視点操作をしていないなら
+	if (!pKeyboard->GetPress(DIK_LALT) && m_pSelect != nullptr)
+	{
+		if (pImgui != nullptr && !pImgui->GetActiveWindow())
+		{
+			// マウスのドラッグ処理
+			m_pSelect->SetMouseDrag();
+		}
+	}
+
+	if (ImGui::Button(u8"種類の適応"))
+	{
+		// 種類の変更
+		m_pSelect->Register(m_aModelPath[m_nType].c_str());
+	}
+
+	if (ImGui::Button(u8"向きのリセット"))
+	{
+		// 向きの設定
+		m_pSelect->SetRotation({ 0.0f,0.0f,0.0f });
+	}
+
+	if (pKeyboard->GetTrigger(DIK_DELETE))
+	{
+		// リストから消去
+		Erase(m_pSelect);
+		m_pSelect = nullptr;
+	}
+}
+
+//===================================================
+// セーブ処理
+//===================================================
+void CMapObjectManager::Save(void)
+{
+	json config;
+
+	// 要素を調べる
+	for (auto itr = m_pMapObjectList.begin(); itr != m_pMapObjectList.end(); itr++)
+	{
+		// nullだったら処理しない
+		if ((*itr) == nullptr) continue;
+
+		// 位置の取得
+		D3DXVECTOR3 pos = (*itr)->GetPosition();
+
+		// 向きの取得
+		D3DXVECTOR3 rot = (*itr)->GetRotation();
+
+		json obj =
+		{
+			{"file_path",(*itr)->GetPath()},
+			{"position",{{"x",pos.x},{"y",pos.y},{"z",pos.z}}},
+			{"rotation",{{"x",rot.x},{"y",rot.y},{"z",rot.z}}}
+		};
+
+		config["MODEL_INFO"].push_back(obj);
+	}
+
+	// ファイルを開く
+	std::ofstream file(JSON_FILE);
+
+	// ファイルが開けたら
+	if (file.is_open())
+	{
+		// ファイルに書き出し
+		file << config.dump(4);
+
+		file.clear();
+		file.close();
+	}
+	else
+	{
+		MessageBox(NULL, "エラー", "ファイルが開けませんでした", MB_OK);
+	}
+}
+
+//===================================================
+// ロード処理
+//===================================================
+void CMapObjectManager::Load(void)
+{
+	json config;
+
+	// ファイルを開く
+	std::ifstream file(JSON_FILE);
+
+	if (file.is_open())
+	{
+		file >> config;
+		file.clear();
+		file.close();
+	}
+	else
+	{
+		MessageBox(NULL, "エラー", "ファイルが開けませんでした", MB_OK);
+		return;
+	}
+
+	// 要素分調べる
+	for (auto& obj : config["MODEL_INFO"])
+	{
+		std::string filepath = obj["file_path"];
+		float posX = obj["position"]["x"];
+		float posY = obj["position"]["y"];
+		float posZ = obj["position"]["z"];
+
+		float rotX = obj["rotation"]["x"];
+		float rotY = obj["rotation"]["y"];
+		float rotZ = obj["rotation"]["z"];
+
+		// モデルの生成
+		Create(D3DXVECTOR3(posX, posY, posZ), D3DXVECTOR3(rotX, rotY, rotZ), filepath.c_str());
+	}
+}
+
+//===================================================
+// リストの連結の解除
+//===================================================
+void CMapObjectManager::Erase(CMapObject* pObj)
+{
+	// 要素を調べる
+	for (auto itr = m_pMapObjectList.begin(); itr != m_pMapObjectList.end(); itr++)
+	{
+		// nullだったら処理しない
+		if ((*itr) == nullptr) continue;
+
+		if ((*itr) == pObj)
+		{
+			// 終了処理
+			(*itr)->Uninit();
+
+			// 間を埋める
+			itr = m_pMapObjectList.erase(itr);
+
+			pObj = nullptr;
+		}
+
+		// 最後尾だったら抜ける
+		if (itr == m_pMapObjectList.end()) break;
+	}
+}
+
+//===================================================
+// ファイルパスの設定処理
+//===================================================
+void CMapObjectManager::SetFilePath(void)
+{
+	// モデルのマネージャーの取得
+	CModelManager* pModelManager = CManager::GetModel();
+
+	// 取得できなかったら処理しない
+	if (pModelManager == nullptr) return;
+	
+	for (auto& modellist : pModelManager->GetList())
+	{
+		// すでにリストに登録されているか調べる
+		auto it = std::find(m_aModelPath.begin(), m_aModelPath.end(), modellist.filepath);
+
+		// 見つからないなら
+		if (it == m_aModelPath.end())
+		{
+			m_aModelPath.push_back(modellist.filepath);
+		}
+	}
 }
 
 //===================================================

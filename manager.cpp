@@ -124,13 +124,6 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 
 	CMeshField::Create(VEC3_NULL, 10, 20, D3DXVECTOR2(500.0f, 500.0f));
 
-#ifdef _DEBUG
-
-#else
-	// カーソルを非表示にする
-	ShowCursor(false);
-#endif // _DEBUG
-
 	// 結果を返す
 	return S_OK;
 }

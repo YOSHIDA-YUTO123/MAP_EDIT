@@ -30,9 +30,9 @@ template <class T> T Clamp(const T value, const T min, const T max)
 // ”ÍˆÍ“à‚É‚ğƒ‹[ƒv‚·‚é
 template <class T> T Wrap(const T value, const T min, const T max)
 {
-	if (value < min) return max;
+	if (value <= min) return max;
 
-	if (value > max) return min;
+	if (value >= max) return min;
 
 	return value;
 };

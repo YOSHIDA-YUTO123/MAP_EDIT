@@ -1,0 +1,19 @@
+{
+    "MODEL_INFO": [
+        {
+            "file_name": "data/MODEL/dust000.x"
+        },
+        {
+            "file_name": "data/MODEL/dust001.x"
+        },
+        {
+            "file_name": "data/MODEL/dust002.x"
+        },
+        {
+            "file_name": "data/MODEL/monument.x"
+        },
+        {
+            "file_name": "data/MODEL/TNTBarrel.x"
+        }
+    ]
+}

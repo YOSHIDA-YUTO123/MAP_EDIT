@@ -138,3 +138,19 @@ void CImGuiManager::NewFrame(void)
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 }
+
+//=============================================================
+// IMGUIのウィンドウを操作しているかどうか
+//=============================================================
+bool CImGuiManager::GetActiveWindow(void)
+{
+	ImGuiIO& io = ImGui::GetIO();
+
+	// IMGUIのウィンドウを操作している
+	if (io.WantCaptureMouse && ImGui::IsMouseClicked(0))
+	{
+		return true;
+	}
+
+	return false;
+}

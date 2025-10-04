@@ -16,6 +16,10 @@
 #include "manager.h"
 #include "renderer.h"
 #include "imgui.h"
+#include <tchar.h>
+#include <shlwapi.h>
+#include "modelManager.h"
+#include <string>
 
 //**************************************************
 // プロトタイプ宣言
@@ -212,6 +216,13 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	switch (uMsg)
 	{
+	case WM_CREATE:
+		// ドラッグ＆ドロップを許可
+		DragAcceptFiles(hWnd, TRUE);	
+		break;
+	case WM_DROPFILES:
+		main.DropXFile(hWnd, wParam);
+		break;
 	case WM_SIZE:
 	{
 		if (wParam == SIZE_MINIMIZED)
@@ -313,4 +324,72 @@ void CMain::ToggleFullscreen(HWND hWnd)
 	}
 
 	m_bFullScreen = !m_bFullScreen;
+}
+
+//==================================================
+// ウィンドウにXFileをドロップしたときの処理
+//==================================================
+void CMain::DropXFile(HWND hWnd, WPARAM wParam)
+{
+	HDROP hDrop = (HDROP)wParam;
+
+	// ドロップされたファイルの数を取得
+	UINT fileCount = DragQueryFile(hDrop, 0xFFFFFFFF, nullptr, 0);
+
+	// ドロップされたファイル分回す
+	for (int nCnt = 0; nCnt < (int)fileCount; nCnt++)
+	{
+		TCHAR filePath[MAX_PATH] = {};
+		DragQueryFile(hDrop, nCnt, filePath, MAX_PATH);
+
+		// ファイルパスの取得
+		MessageBox(hWnd, filePath, _T("ドロップされたファイル"), MB_OK);
+
+		// data//の先頭アドレスの取得
+		TCHAR* relative = _tcsstr(filePath, _T("data\\"));
+
+		// nullだったら処理しない
+		if (relative == nullptr) continue;
+
+		if (relative)
+		{
+			OutputDebugString(relative);
+		}
+		else
+		{
+			MessageBox(hWnd, filePath, _T("見つかりませんでした"), MB_OK);
+		}
+
+		// \\を/に変換
+		NormalizePathSlash(relative);
+
+		if (PathMatchSpec(relative, _T("*.x")))
+		{
+			// モデルのマネージャーの取得
+			CModelManager* pModelManager = CManager::GetModel();
+
+			if (pModelManager != nullptr)
+			{
+				// モデルの登録
+				pModelManager->Register(relative);
+				relative = nullptr;
+			}
+		}
+	}
+
+	DragFinish(hDrop);
+}
+
+//==================================================
+// ドロップされたファイルのパスの\\を/に変換する処理
+//==================================================
+void CMain::NormalizePathSlash(TCHAR* path)
+{
+	for (TCHAR* p = path; *p; ++p)
+	{
+		if (*p == _T('\\'))
+		{
+			*p = _T('/');
+		}
+	}
 }

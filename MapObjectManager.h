@@ -46,7 +46,7 @@ public:
 	/// <param name="pos"></param>
 	/// <param name="pModelFileName"></param>
 	/// <returns>マップオブジェクトのインスタンス</returns>
-	CMapObject* Create(const D3DXVECTOR3 pos, const char* pModelFileName);
+	CMapObject* Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, const char* pModelFileName);
 
 	/// <summary>
 	/// マップオブジェクトのリストの取得
@@ -61,11 +61,16 @@ private:
 
 	void GetModelPath(void);
 	void SetModelPathList(void);
-	void SetSelectObj(void);
+	void SetSelectObjAlv(void);
 	void SetInspector(void);
 	void UpdateEditMapObj(void);
 	bool CollisionMouse(void);
 	HRESULT Register(void);
+	void UpdateSelectObj(void);
+	void Save(void);
+	void Load(void);
+	void Erase(CMapObject* pObj);
+	void SetFilePath(void);
 
 	static std::unique_ptr<CMapObjectManager> m_pInstance; // 自分のインスタンス
 	static std::vector<CMapObject*> m_pMapObjectList;	   // マップオブジェクトのリスト
