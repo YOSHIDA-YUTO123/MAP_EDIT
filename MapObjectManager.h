@@ -63,6 +63,8 @@ public:
 	/// <returns>判定結果</returns>
 	bool GetDragMoveState(void) const { return m_bDragMoveXZ; }
 private:
+	static constexpr float MOVE_VALUE = 5.0f; // 移動量
+
 	CMapObjectManager();
 
 	void GetModelPath(void);
@@ -84,6 +86,7 @@ private:
 	static std::vector<std::string> m_aModelPath;		   // モデルのパスのリスト
 	CEditMapObject* m_pEditMapObj;						   // 編集用マップオブジェクト
 	CMapObject* m_pSelect;								   // 選択中のマップオブジェクト
+	float m_fMove;										   // 移動量
 	int m_nType;										   // モデルの種類
 	bool m_bDragMoveXZ;									   // ドラッグ移動をXZ平面にするか
 };

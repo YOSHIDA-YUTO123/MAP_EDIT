@@ -180,6 +180,7 @@
     <ClCompile Include="MapObjectManager.cpp" />
     <ClCompile Include="math.cpp" />
     <ClCompile Include="meshfield.cpp" />
+    <ClCompile Include="MeshFieldManager.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="modelManager.cpp" />
     <ClCompile Include="motion.cpp" />
@@ -238,6 +239,7 @@
     <ClInclude Include="MapObjectManager.h" />
     <ClInclude Include="math.h" />
     <ClInclude Include="meshfield.h" />
+    <ClInclude Include="MeshFieldManager.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="modelManager.h" />
     <ClInclude Include="motion.h" />

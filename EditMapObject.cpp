@@ -17,12 +17,14 @@
 #include "renderer.h"
 #include "imguimaneger.h"
 #include "MapObjectManager.h"
+#include "camera.h"
 
 //===================================================
 // コンストラクタ
 //===================================================
-CEditMapObject::CEditMapObject()
+CEditMapObject::CEditMapObject() : CObjectX(7)
 {
+	m_fMove = NULL;
 	m_bMouseUp = true;
 	m_bShow = false;
 }
@@ -95,6 +97,78 @@ void CEditMapObject::Uninit(void)
 // 更新処理
 //===================================================
 void CEditMapObject::Update(void)
+{
+}
+
+//===================================================
+// 描画処理
+//===================================================
+void CEditMapObject::Draw(void)
+{
+	// 見えるなら
+	if (m_bShow)
+	{
+		// 描画処理
+		CObjectX::Draw(D3DXCOLOR(0.4f,1.0f,1.0f,0.5f));
+	}
+}
+
+//===================================================
+// マウスの当たり判定
+//===================================================
+bool CEditMapObject::CollisionMouse(float* pDistance)
+{
+	BOOL hit = false;
+	DWORD faceIndex;
+	(*pDistance) = FLT_MAX;
+	FLOAT baryU, baryV; // 当たったポリゴンの位置
+
+	// モデルの情報の取得
+	const CModelManager::ModelInfo modelInfo = CObjectX::GetModelInfo();
+
+	// レイの原点
+	D3DXVECTOR3 rayOrigin, rayDir;
+
+	// レイの取得
+	math::GetMouseRay(&rayOrigin, &rayDir);
+
+	// モデルのワールド行列
+	D3DXMATRIX matWorld = CObjectX::GetMatrix();
+
+	// 逆行列
+	D3DXMATRIX matInvWorld;
+	D3DXMatrixInverse(&matInvWorld, NULL, &matWorld);
+
+	// レイをローカル空間に変換
+	D3DXVec3TransformCoord(&rayOrigin, &rayOrigin, &matInvWorld);
+	D3DXVec3TransformNormal(&rayDir, &rayDir, &matInvWorld);
+	D3DXVec3Normalize(&rayDir, &rayDir);
+
+	// レイとポリゴンの当たり判定
+	D3DXIntersect(
+		modelInfo.pMesh,
+		&rayOrigin,
+		&rayDir,
+		&hit,
+		&faceIndex,
+		&baryU,
+		&baryV,
+		pDistance,
+		nullptr,
+		nullptr);
+
+	if (hit)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+//===================================================
+// 編集モードの更新処理
+//===================================================
+void CEditMapObject::UpdateEdit(void)
 {
 	// キーボードの取得
 	CInputKeyboard* pKeyboard = CManager::GetInputKeyboard();
@@ -172,72 +246,63 @@ void CEditMapObject::Update(void)
 
 		// 位置の更新
 		pos += move;
-
-		CObjectX::SetPosition(pos);
 	}
-}
 
-//===================================================
-// 描画処理
-//===================================================
-void CEditMapObject::Draw(void)
-{
-	// 見えるなら
-	if (m_bShow)
+	// カメラの取得
+	CCamera* pCamera = CManager::GetCamera();
+
+	// カメラを取得出来なかったら処理しない
+	if (pCamera == nullptr) return;
+
+	// カメラの角度の取得
+	float fCameraAngle = pCamera->GetRotaition().y;
+
+	if (pKeyboard->GetPress(DIK_A))
 	{
-		// 描画処理
-		CObjectX::Draw(D3DXCOLOR(0.4f,1.0f,1.0f,0.5f));
+		if (pKeyboard->GetPress(DIK_W))
+		{
+			pos.x += sinf(fCameraAngle - D3DX_PI * 0.25f) * m_fMove;
+			pos.z += cosf(fCameraAngle - D3DX_PI * 0.25f) * m_fMove;
+		}
+		else if (pKeyboard->GetPress(DIK_S))
+		{
+			pos.x += sinf(fCameraAngle - D3DX_PI * 0.75f) * m_fMove;
+			pos.z += cosf(fCameraAngle - D3DX_PI * 0.75f) * m_fMove;
+		}
+		else
+		{
+			pos.x += sinf(fCameraAngle - D3DX_PI * 0.5f) * m_fMove;
+			pos.z += cosf(fCameraAngle - D3DX_PI * 0.5f) * m_fMove;
+		}
 	}
-}
-
-//===================================================
-// マウスの当たり判定
-//===================================================
-bool CEditMapObject::CollisionMouse(float* pDistance)
-{
-	BOOL hit = false;
-	DWORD faceIndex;
-	(*pDistance) = FLT_MAX;
-	FLOAT baryU, baryV; // 当たったポリゴンの位置
-
-	// モデルの情報の取得
-	const CModelManager::ModelInfo modelInfo = CObjectX::GetModelInfo();
-
-	// レイの原点
-	D3DXVECTOR3 rayOrigin, rayDir;
-
-	// レイの取得
-	math::GetMouseRay(&rayOrigin, &rayDir);
-
-	// モデルのワールド行列
-	D3DXMATRIX matWorld = CObjectX::GetMatrix();
-
-	// 逆行列
-	D3DXMATRIX matInvWorld;
-	D3DXMatrixInverse(&matInvWorld, NULL, &matWorld);
-
-	// レイをローカル空間に変換
-	D3DXVec3TransformCoord(&rayOrigin, &rayOrigin, &matInvWorld);
-	D3DXVec3TransformNormal(&rayDir, &rayDir, &matInvWorld);
-	D3DXVec3Normalize(&rayDir, &rayDir);
-
-	// レイとポリゴンの当たり判定
-	D3DXIntersect(
-		modelInfo.pMesh,
-		&rayOrigin,
-		&rayDir,
-		&hit,
-		&faceIndex,
-		&baryU,
-		&baryV,
-		pDistance,
-		nullptr,
-		nullptr);
-
-	if (hit)
+	else if (pKeyboard->GetPress(DIK_D))
 	{
-		return true;
+		if (pKeyboard->GetPress(DIK_W))
+		{
+			pos.x += sinf(fCameraAngle + D3DX_PI * 0.25f) * m_fMove;
+			pos.z += cosf(fCameraAngle + D3DX_PI * 0.25f) * m_fMove;
+		}
+		else if (pKeyboard->GetPress(DIK_S))
+		{
+			pos.x += sinf(fCameraAngle + D3DX_PI * 0.75f) * m_fMove;
+			pos.z += cosf(fCameraAngle + D3DX_PI * 0.75f) * m_fMove;
+		}
+		else
+		{
+			pos.x += sinf(fCameraAngle + D3DX_PI * 0.5f) * m_fMove;
+			pos.z += cosf(fCameraAngle + D3DX_PI * 0.5f) * m_fMove;
+		}
+	}
+	else if (pKeyboard->GetPress(DIK_W))
+	{
+		pos.x += sinf(fCameraAngle) * m_fMove;
+		pos.z += cosf(fCameraAngle) * m_fMove;
+	}
+	else if (pKeyboard->GetPress(DIK_S))
+	{
+		pos.x += sinf(fCameraAngle + D3DX_PI) * m_fMove;
+		pos.z += cosf(fCameraAngle + D3DX_PI) * m_fMove;
 	}
 
-	return false;
+	CObjectX::SetPosition(pos);
 }

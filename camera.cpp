@@ -206,10 +206,8 @@ void CCamera::MouseView(void)
 	// マウスの取得
 	CInputMouse* pMouse = CManager::GetInputMouse();
 
-#ifdef _DEBUG
 	// マウスホイール
 	CCamera::MouseWheel();
-#endif
 
 	// キーボードの取得
 	CInputKeyboard* pKeyboard = CManager::GetInputKeyboard();

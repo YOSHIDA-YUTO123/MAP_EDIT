@@ -35,6 +35,8 @@ public:
 	void SetALv(const float fAlv) { m_fAlv = fAlv; }
 	void Register(const char* pModelFileName);
 	void SetRotation(const D3DXVECTOR3 rot) { m_rot = rot; }
+	void UpdateMove(void);
+	void SetMove(const float fMove) { m_fMove = fMove; }
 
 	const char* GetPath(void) const { return m_aModelPath.c_str(); }
 	D3DXVECTOR3 GetPosition(void) const { return m_pos; }
@@ -54,11 +56,14 @@ public:
 
 	void SetMouseDrag(void);
 private:
+	static constexpr float MOVE_VALUE = 5.0f; // 移動量
+
 	D3DXVECTOR3 m_pos;			// 位置
 	D3DXVECTOR3 m_rot;			// 向き
 	D3DXMATRIX m_mtxWorld;		// ワールドマトリックス
 	std::string m_aModelPath;	// モデルのパス
 	float m_fAlv;				// アルファ値
+	float m_fMove;				// 移動量
 	int m_nModelIdx;			// モデルのインデックス
 	bool m_bMouseUp;			// マウスを離したかどうか
 };

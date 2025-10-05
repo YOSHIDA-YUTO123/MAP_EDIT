@@ -205,7 +205,7 @@ void CMapObjectManager::Update(void)
 		}
 	}
 	
-	if (ImGui::Button(u8"セーブする"))
+	if (ImGui::Button(u8"セーブする", ImVec2(300.0, 0)))
 	{
 		int nID = MessageBox(NULL, "配置情報のセーブ", "セーブしますか ?", MB_YESNO);
 
@@ -223,7 +223,7 @@ void CMapObjectManager::Update(void)
 		}
 	}
 
-	if (ImGui::Button(u8"ロード"))
+	if (ImGui::Button(u8"ロード", ImVec2(300.0, 0)))
 	{
 		int nID = MessageBox(NULL, "ステージのロード", "ロードしますか ?", MB_YESNO);
 
@@ -251,6 +251,7 @@ void CMapObjectManager::Update(void)
 //===================================================
 CMapObjectManager::CMapObjectManager()
 {
+	m_fMove = MOVE_VALUE;
 	m_bDragMoveXZ = false;
 	m_pSelect = nullptr;
 	m_nType = 0;
@@ -368,6 +369,9 @@ void CMapObjectManager::UpdateEditMapObj(void)
 
 	// 要素がないなら処理しない
 	if (m_aModelPath.empty()) return;
+
+	m_pEditMapObj->SetMove(m_fMove);
+	m_pEditMapObj->UpdateEdit();
 
 	// 編集用モデルの位置の取得
 	D3DXVECTOR3 pos = m_pEditMapObj->GetPosition();
@@ -539,19 +543,23 @@ void CMapObjectManager::UpdateSelectObj(void)
 		}
 	}
 
-	if (ImGui::Button(u8"種類の適応"))
+	// 移動の設定
+	m_pSelect->SetMove(m_fMove);
+	m_pSelect->UpdateMove();
+
+	if (ImGui::Button(u8"種類の適応", ImVec2(300.0, 0)))
 	{
 		// 種類の変更
 		m_pSelect->Register(m_aModelPath[m_nType].c_str());
 	}
 
-	if (ImGui::Button(u8"向きのリセット"))
+	if (ImGui::Button(u8"向きのリセット", ImVec2(300.0, 0)))
 	{
 		// 向きの設定
 		m_pSelect->SetRotation({ 0.0f,0.0f,0.0f });
 	}
 
-	if (pKeyboard->GetTrigger(DIK_DELETE))
+	if (pKeyboard->GetTrigger(DIK_DELETE) || ImGui::Button(u8"消去", ImVec2(300.0, 0)))
 	{
 		// リストから消去
 		Erase(m_pSelect);

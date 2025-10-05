@@ -108,7 +108,7 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 	m_pTexture = new CTextureManager;
 
 	// すべてのテクスチャの読み込み処理
-	m_pTexture->Load();
+	//m_pTexture->Load();
 
 	// モデルの生成
 	m_pModel = new CModelManager;

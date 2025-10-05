@@ -17,12 +17,14 @@
 #include "imgui.h"
 #include "input.h"
 #include "MapObjectManager.h"
+#include "camera.h"
 
 //===================================================
 // コンストラクタ
 //===================================================
 CMapObject::CMapObject()
 {
+	m_fMove = MOVE_VALUE;
 	m_bMouseUp = true;
 	m_fAlv = 1.0f;
 	m_pos = Const::VEC3_NULL;
@@ -178,6 +180,71 @@ void CMapObject::Register(const char* pModelFileName)
 
 	// モデルのパスの設定
 	m_aModelPath = pModelFileName;
+}
+
+//===================================================
+// 移動処理
+//===================================================
+void CMapObject::UpdateMove(void)
+{
+	// キーボードの取得
+	CInputKeyboard* pKeyboard = CManager::GetInputKeyboard();
+
+	// カメラの取得
+	CCamera* pCamera = CManager::GetCamera();
+
+	// カメラを取得出来なかったら処理しない
+	if (pCamera == nullptr) return;
+
+	// カメラの角度の取得
+	float fCameraAngle = pCamera->GetRotaition().y;
+
+	if (pKeyboard->GetPress(DIK_A))
+	{
+		if (pKeyboard->GetPress(DIK_W))
+		{
+			m_pos.x += sinf(fCameraAngle - D3DX_PI * 0.25f) * m_fMove;
+			m_pos.z += cosf(fCameraAngle - D3DX_PI * 0.25f) * m_fMove;
+		}
+		else if (pKeyboard->GetPress(DIK_S))
+		{
+			m_pos.x += sinf(fCameraAngle - D3DX_PI * 0.75f) * m_fMove;
+			m_pos.z += cosf(fCameraAngle - D3DX_PI * 0.75f) * m_fMove;
+		}
+		else
+		{
+			m_pos.x += sinf(fCameraAngle - D3DX_PI * 0.5f) * m_fMove;
+			m_pos.z += cosf(fCameraAngle - D3DX_PI * 0.5f) * m_fMove;
+		}
+	}
+	else if (pKeyboard->GetPress(DIK_D))
+	{
+		if (pKeyboard->GetPress(DIK_W))
+		{
+			m_pos.x += sinf(fCameraAngle + D3DX_PI * 0.25f) * m_fMove;
+			m_pos.z += cosf(fCameraAngle + D3DX_PI * 0.25f) * m_fMove;
+		}
+		else if (pKeyboard->GetPress(DIK_S))
+		{
+			m_pos.x += sinf(fCameraAngle + D3DX_PI * 0.75f) * m_fMove;
+			m_pos.z += cosf(fCameraAngle + D3DX_PI * 0.75f) * m_fMove;
+		}
+		else
+		{
+			m_pos.x += sinf(fCameraAngle + D3DX_PI * 0.5f) * m_fMove;
+			m_pos.z += cosf(fCameraAngle + D3DX_PI * 0.5f) * m_fMove;
+		}
+	}
+	else if (pKeyboard->GetPress(DIK_W))
+	{
+		m_pos.x += sinf(fCameraAngle) * m_fMove;
+		m_pos.z += cosf(fCameraAngle) * m_fMove;
+	}
+	else if (pKeyboard->GetPress(DIK_S))
+	{
+		m_pos.x += sinf(fCameraAngle + D3DX_PI) * m_fMove;
+		m_pos.z += cosf(fCameraAngle + D3DX_PI) * m_fMove;
+	}
 }
 
 //===================================================
