@@ -18,6 +18,8 @@
 #include "imgui.h"
 #include "imgui_impl_dx9.h"
 #include "imgui_impl_win32.h"
+#include <vector>
+#include <string>
 
 //***************************************************
 // IMGUIマネージャークラスの定義
@@ -53,7 +55,16 @@ public:
 	/// <param name=""></param>
 	/// <returns>判定結果</returns>
 	bool GetActiveWindow(void);
+
+	/// <summary>
+	/// ドラッグ元(テクスチャアイコンの表示)
+	/// </summary>
+	/// <param name="texture"></param>
+	/// <param name="pModelType"></param>
+	void ShowTextureIcon(const LPDIRECT3DTEXTURE9 texture, const char* pModelType);
 private:
+	static bool m_bDraggingModel; // モデルをドラッグしているか
+	static std::string m_DraggingModelType; // ドラッグしているモデルの種類
 };
 
 #endif // !_IMGUIMANEGER_H_

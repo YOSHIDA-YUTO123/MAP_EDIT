@@ -6,12 +6,23 @@
 //=============================================================
 
 //*************************************************************
-//インクルードファイル
+// インクルードファイル
 //*************************************************************
 #include "imguimaneger.h"
 #include "imgui_internal.h"
+#include "manager.h"
+#include "renderer.h"
+#include "math.h"
+#include "MapObjectManager.h"
+#include "TextureMTManager.h"
 
 using namespace ImGui; // 名前空間imguiを使用
+
+//*************************************************************
+// 静的メンバ変数
+//*************************************************************
+bool CImGuiManager::m_bDraggingModel = false; // ドラッグしているかどうか
+std::string CImGuiManager::m_DraggingModelType; // ドラッグしているモデルの種類
 
 //=============================================================
 // コンストラクタ
@@ -147,10 +158,84 @@ bool CImGuiManager::GetActiveWindow(void)
 	ImGuiIO& io = ImGui::GetIO();
 
 	// IMGUIのウィンドウを操作している
-	if (io.WantCaptureMouse && ImGui::IsMouseClicked(0))
+	if (io.WantCaptureMouse && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
 	{
 		return true;
 	}
 
 	return false;
+}
+
+//=============================================================
+// IMGUIのテクスチャのICONの表示
+//=============================================================
+void CImGuiManager::ShowTextureIcon(const LPDIRECT3DTEXTURE9 texture, const char* pModelType)
+{
+	if (ImGui::ImageButton(pModelType, (ImTextureID)texture, ImVec2(64, 64)))
+	{
+	}
+
+	if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left) && !m_bDraggingModel)
+	{
+		m_bDraggingModel = true;
+		m_DraggingModelType = pModelType;
+	}
+
+	if (m_bDraggingModel && ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+	{
+		POINT mousePos;
+		GetCursorPos(&mousePos);
+		ScreenToClient(FindWindowA(CLASS_NAME, WINDOW_NAME), &mousePos); // DirectX座標系に変換
+
+		// ImGuiのデバイスとビューポートの取得
+		LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
+		D3DVIEWPORT9 vp;
+		pDevice->GetViewport(&vp);
+
+		// 計算用行列
+		D3DXMATRIX view, proj;
+
+		// ビュー、プロジェクションマトリックスの取得
+		pDevice->GetTransform(D3DTS_VIEW, &view);
+		pDevice->GetTransform(D3DTS_PROJECTION, &proj);
+
+		// 変換座標の取得
+		D3DXVECTOR3 pos = math::ScreenToWorld(
+			D3DXVECTOR2(static_cast<float>(mousePos.x), static_cast<float>(mousePos.y)),
+			0.0f,
+			vp,
+			view,
+			proj);
+
+		// ブロックを生成する
+		CMapObjectManager::GetInstance()->Create(pos, { 0.0f,0.0f,0.0f }, m_DraggingModelType.c_str());
+		
+		m_bDraggingModel = false;
+		m_DraggingModelType.clear();
+	}
+
+	// ドラッグ中だったら
+	if (m_bDraggingModel && m_DraggingModelType == pModelType)
+	{
+		// テクスチャMTの取得
+		CTextureMTManager* pTextureMT = CManager::GetTextureMT();
+
+		// 取得できなかったら処理しない
+		if (pTextureMT == nullptr) return;
+
+		ImVec2 mouse = ImGui::GetMousePos();
+		ImGui::GetForegroundDrawList()->AddImage(
+			(ImTextureID)texture,
+			ImVec2(mouse.x - 32, mouse.y - 32),
+			ImVec2(mouse.x + 32, mouse.y + 32),
+			ImVec2(0, 0),
+			ImVec2(1, 1),
+			IM_COL32(255, 255, 255, 180));
+	}
+
+	// ボタンを離したらドラッグ終了
+	if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+	{
+		m_bDraggingModel = false;
+	}
 }

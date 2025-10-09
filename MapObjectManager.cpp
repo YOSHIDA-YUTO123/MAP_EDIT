@@ -22,6 +22,10 @@
 #include "imgui_internal.h"
 #include "DebugLog.h"
 #include "camera.h"
+#include "textureManager.h"
+#include "IconModel.h"
+#include "object3D.h"
+#include "TextureMTManager.h"
 
 // jsonの使用
 using json = nlohmann::json;
@@ -94,8 +98,8 @@ HRESULT CMapObjectManager::Init(void)
 	// モデルの情報の取得
 	CModelManager::ModelInfo modelInfo = pModelManager->GetModelInfo(0);
 
-	// 編集用マップオブジェクトの生成
-	m_pEditMapObj = CEditMapObject::Create();
+	// アイコンの生成
+	CIconModel::Create();
 
 	//// マップオブジェクトの生成
 	//m_pSelect = CMapObjectManager::Create({ -500.0f,0.0f,0.0f }, modelInfo.filepath);
@@ -140,7 +144,11 @@ void CMapObjectManager::Update(void)
 	// 配置モードかどうか
 	static bool bSetMode = true;
 
-	SetCamerafocus(bSetMode);
+	// カメラのフォーカス処理
+	SetCamerafocus();
+
+	// アイコンの設定処理
+	SetTextureIcon(pImgui);
 
 	if (ImGui::RadioButton(u8"オブジェクトを平面で移動させる", m_bDragMoveXZ))
 	{
@@ -150,33 +158,9 @@ void CMapObjectManager::Update(void)
 
 	if (ImGui::BeginTabBar("test0000"))
 	{
-		if (ImGui::BeginTabItem(u8"配置"))
-		{
-			bSetMode = true;
-
-			if (m_pEditMapObj != nullptr)
-			{
-				// 表示する
-				m_pEditMapObj->SetShow(true);
-			}
-
-			// 選択しない
-			m_pSelect = nullptr;
-
-			// 編集用オブジェとの更新処理
-			UpdateEditMapObj();
-
-			ImGui::EndTabItem();
-		}
-
 		if (ImGui::BeginTabItem(u8"配置オブジェクト設定"))
 		{
 			bSetMode = false;
-			if (m_pEditMapObj != nullptr)
-			{
-				// 表示しない
-				m_pEditMapObj->SetShow(false);
-			}
 
 			// モデルのインスペクター
 			SetInspector();
@@ -255,7 +239,6 @@ CMapObjectManager::CMapObjectManager()
 	m_bDragMoveXZ = false;
 	m_pSelect = nullptr;
 	m_nType = 0;
-	m_pEditMapObj = nullptr;
 }
 
 //===================================================
@@ -297,7 +280,7 @@ void CMapObjectManager::SetModelPathList(void)
 {
 	if (m_aModelPath.empty()) return;
 
-	if (ImGui::BeginCombo(u8"モデルの種類", m_aModelPath[m_nType].c_str()))
+	if (ImGui::BeginCombo("##", m_aModelPath[m_nType].c_str()))
 	{
 		int nCnt = 0;
 
@@ -357,57 +340,6 @@ void CMapObjectManager::SetInspector(void)
 		// 情報の設定
 		m_pSelect->SetInfo();
 	}
-}
-
-//===================================================
-// 編集用のマップオブジェクトの更新処理
-//===================================================
-void CMapObjectManager::UpdateEditMapObj(void)
-{
-	// nullなら処理しない
-	if (m_pEditMapObj == nullptr) return;
-
-	// 要素がないなら処理しない
-	if (m_aModelPath.empty()) return;
-
-	m_pEditMapObj->SetMove(m_fMove);
-	m_pEditMapObj->UpdateEdit();
-
-	// 編集用モデルの位置の取得
-	D3DXVECTOR3 pos = m_pEditMapObj->GetPosition();
-
-	// 編集用モデルの向きの取得
-	D3DXVECTOR3 rot = D3DXToDegree(m_pEditMapObj->GetRotation());
-
-	// キーボードの取得
-	CInputKeyboard* pKeyboard = CManager::GetInputKeyboard();
-
-	// 位置の情報
-	ImGui::DragFloat3(u8"位置", pos, 0.5f);
-
-	// 情報の設定
-	if (ImGui::DragFloat3(u8"向き", rot, 0.5f, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI)))
-	{
-		// 範囲内をループ
-		rot.x = Wrap(rot.x, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI));
-		rot.y = Wrap(rot.y, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI));
-		rot.z = Wrap(rot.z, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI));
-	}
-
-	if (ImGui::Button(u8"オブジェクトを生成",ImVec2(300.0,0)) || pKeyboard->GetTrigger(DIK_RETURN))
-	{
-		// モデルの生成
-		Create(pos, D3DXToRadian(rot), m_aModelPath[m_nType].c_str());
-	}
-
-	// 位置の設定
-	m_pEditMapObj->SetPosition(pos);
-
-	// 向きの設定
-	m_pEditMapObj->SetRotation(D3DXToRadian(rot));
-
-	// モデルの種類の設定
-	m_pEditMapObj->LoadModel(m_aModelPath[m_nType].c_str());
 }
 
 //===================================================
@@ -707,11 +639,11 @@ void CMapObjectManager::SetFilePath(void)
 //===================================================
 // カメラのフォーカス
 //===================================================
-void CMapObjectManager::SetCamerafocus(const bool bMode)
+void CMapObjectManager::SetCamerafocus(void)
 {
 	if (ImGui::Button(u8"カメラを選択モデルにフォーカス"))
 	{
-		D3DXVECTOR3 selectPos = { 0.0f,0.0f,0.0f };
+		D3DXVECTOR3 selectPos = Const::VEC3_NULL;
 
 		if (m_pSelect != nullptr)
 		{
@@ -719,20 +651,58 @@ void CMapObjectManager::SetCamerafocus(const bool bMode)
 			selectPos = m_pSelect->GetPosition();
 		}
 
-		D3DXVECTOR3 gostPos = m_pEditMapObj->GetPosition();
-
-		D3DXVECTOR3 pos = bMode ? gostPos : selectPos;
-
 		// カメラの取得
 		CCamera* pCamera = CManager::GetCamera();
 
 		// nullだったら処理しない
 		if (pCamera == nullptr)return;
 
-		pCamera->SetPosV(pos);
-		pCamera->SetPosR(pos);
+		pCamera->SetPosV(selectPos);
+		pCamera->SetPosR(selectPos);
 		pCamera->UpdatePositionV();
 		pCamera->UpdatePositionR();
+	}
+}
+
+//===================================================
+// テクスチャのアイコンの設定
+//===================================================
+void CMapObjectManager::SetTextureIcon(CImGuiManager* pImgui)
+{
+	// モデルパスのリストが無いなら
+	if (m_aModelPath.empty()) return;
+
+	// テクスチャのマネージャーの取得
+	CTextureManager* pTexture = CManager::GetTexture();
+
+	// 取得できなかったら処理しない
+	if (pTexture == nullptr) return;
+
+	// モデルのマネージャーの取得
+	CModelManager* pModelManager = CManager::GetModel();
+
+	// モデルマネージャーの取得
+	if (pModelManager == nullptr) return;
+
+	// テクスチャMTの取得
+	CTextureMTManager* pTextureMT = CManager::GetTextureMT();
+
+	// 取得できなかったら処理しない
+	if (pTextureMT == nullptr) return;
+
+	for (auto& modelList : pModelManager->GetList())
+	{
+		// パスの登録
+		pTextureMT->GetAddress(modelList.filepath);
+	}
+
+	for (auto& modelList : pTextureMT->GetList())
+	{
+		// モデルの名前の取得
+		const char* pModelName = modelList.aName.c_str();
+
+		// テクスチャのアイコンの表示
+		pImgui->ShowTextureIcon(pTextureMT->GetAddress(pModelName), pModelName);
 	}
 }
 

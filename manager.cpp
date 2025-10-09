@@ -29,6 +29,7 @@
 #include "MapObject.h"
 #include "EditMapObject.h"
 #include "DebugLog.h"
+#include "TextureMTManager.h"
 
 using namespace Const;			// 名前空間Constを使用する
 using namespace std;			// 名前空間stdを使用する
@@ -48,7 +49,8 @@ CCamera* CManager::m_pCamera = nullptr;					// カメラのポインタ
 CLight* CManager::m_pLight = nullptr;					// カメラへのポインタ
 CModelManager* CManager::m_pModel = nullptr;			// モデルのクラスへのポインタ
 CDebugLog* CManager::m_pDebugLog = nullptr;				// デバッグログのクラスへのポインタ
-	
+CTextureMTManager* CManager::m_pTexutreMTManager = nullptr; // テクスチャMTのクラスへのポインタ
+
 //===================================================
 // コンストラクタ
 //===================================================
@@ -114,6 +116,8 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 	m_pModel = new CModelManager;
 	m_pModel->Load();
 
+	m_pTexutreMTManager = new CTextureMTManager;
+	
 	// カメラの生成
 	m_pCamera = new CCamera;
 	m_pCamera->Init();
@@ -139,6 +143,14 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 //===================================================
 void CManager::Uninit(void)
 {
+	// テクスチャMTの破棄
+	if (m_pTexutreMTManager != nullptr)
+	{
+		m_pTexutreMTManager->Uninit();
+		delete m_pTexutreMTManager;
+		m_pTexutreMTManager = nullptr;
+	}
+
 	// モデルの破棄
 	if (m_pModel != nullptr)
 	{

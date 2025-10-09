@@ -16,6 +16,8 @@
 #include "camera.h"
 #include "imguimaneger.h"
 #include "light.h"
+#include "debugproc.h"
+#include "TextureMTManager.h"
 
 //***************************************************
 // 名前空間
@@ -35,16 +37,8 @@ CRenderer::CRenderer()
 {
 	m_pD3D = nullptr;			// Directxのデバイスの初期化
 	m_pD3DDevice = nullptr;		// Directxのデバイスの初期化
-
-	for (int nCnt = 0; nCnt < NUM_TEXTUREMT; nCnt++)
-	{
-		m_pRenderMT[nCnt] = nullptr;		// レンダリングターゲット用インターフェース
-		m_pTextureMT[nCnt] = nullptr;		// レンダリングターゲット用テクスチャ
-	}
-	m_pVtxBuffMT = nullptr;
+	
 	m_fALv = NULL;
-	m_pZBuffMT = nullptr;		// レンダリングターゲット用Zバッファ
-	ZeroMemory(&m_viewport, sizeof(m_viewport)); // ビューポート
 	m_bEffect = false;
 	m_bDeviceLost = false;
 	m_ResizeHeight = 0;
@@ -150,126 +144,6 @@ HRESULT CRenderer::Init(HWND hWnd, BOOL bWindow)
 		m_pDebug->Init();
 	}
 
-	//LPDIRECT3DSURFACE9 pRenderDef, pZBufferDef;
-
-	//for (int nCnt = 0; nCnt < NUM_TEXTUREMT; nCnt++)
-	//{
-	//	// レンダラーターゲット用テクスチャの生成
-	//	m_pD3DDevice->CreateTexture(
-	//		SCREEN_WIDTH,
-	//		SCREEN_HEIGHT,
-	//		1,
-	//		D3DUSAGE_RENDERTARGET,
-	//		D3DFMT_X8R8G8B8,
-	//		D3DPOOL_DEFAULT,
-	//		&m_pTextureMT[nCnt],
-	//		NULL);
-
-	//	// テクスチャのレンダリングターゲット用インターフェースの生成
-	//	m_pTextureMT[nCnt]->GetSurfaceLevel(0, &m_pRenderMT[nCnt]);
-	//}
-
-	//// テクスチャレンダリング用Zバッファの生成
-	//m_pD3DDevice->CreateDepthStencilSurface(
-	//	SCREEN_WIDTH,
-	//	SCREEN_HEIGHT,
-	//	D3DFMT_D24S8,
-	//	D3DMULTISAMPLE_NONE,
-	//	0,
-	//	TRUE,
-	//	&m_pZBuffMT,
-	//	NULL);
-
-	//// 現在のレンダリングターゲットを取得(保存)
-	//m_pD3DDevice->GetRenderTarget(0, &pRenderDef);
-
-	//// 現在のZバッファの取得(保存)
-	//m_pD3DDevice->GetDepthStencilSurface(&pZBufferDef);
-
-	//for (int nCnt = 0; nCnt < NUM_TEXTUREMT; nCnt++)
-	//{
-	//	// レンダリングターゲットを生成したテクスチャに設定
-	//	m_pD3DDevice->SetRenderTarget(0, m_pRenderMT[nCnt]);
-	//}
-
-	//// Zバッファを生成したZバッファの設定
-	//m_pD3DDevice->SetDepthStencilSurface(m_pZBuffMT);
-
-	//// レンダリングターゲット用テクスチャのクリア
-	//m_pD3DDevice->Clear(0,
-	//	NULL,
-	//	(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER),
-	//	D3DCOLOR_RGBA(0, 0, 0, 255), 1.0f, 0);
-
-	//// レンダーターゲットをもとに戻す
-	//m_pD3DDevice->SetRenderTarget(0, pRenderDef);
-
-	//// Zバッファをもとに戻す
-	//m_pD3DDevice->SetDepthStencilSurface(pZBufferDef);
-
-	//// テクスチャレンダリング用ビューポートの生成
-	//m_viewport.X = 0;
-	//m_viewport.Y = 0;
-	//m_viewport.Width = SCREEN_WIDTH;
-	//m_viewport.Height = SCREEN_HEIGHT;
-	//m_viewport.MinZ = 0.0f;
-	//m_viewport.MaxZ = 1.0f;
-
-	////頂点バッファの生成・頂点情報の設定
-	//if (FAILED(m_pD3DDevice->CreateVertexBuffer(sizeof(VERTEX_2D) * 4 * NUM_TEXTUREMT,
-	//	D3DUSAGE_WRITEONLY,
-	//	FVF_VERTEX_2D,
-	//	D3DPOOL_MANAGED,
-	//	&m_pVtxBuffMT,
-	//	NULL)))
-	//{
-	//	return E_FAIL;
-	//}
-
-	//// 頂点情報のポインタ
-	//VERTEX_2D* pVtx;
-
-	//// 頂点バッファのロック
-	//m_pVtxBuffMT->Lock(0, 0, (void**)&pVtx, 0);
-
-	//for (int nCnt = 0; nCnt < NUM_TEXTUREMT; nCnt++)
-	//{
-	//	D3DXVECTOR2 pos = D3DXVECTOR2(640.0f, 360.0f);
-
-	//	float width = SCREEN_WIDTH * 0.5f;
-	//	float height = SCREEN_HEIGHT * 0.5f;
-
-	//	// 頂点座標の設定
-	//	pVtx[0].pos = D3DXVECTOR3(pos.x - width, pos.y - height, 0.0f);
-	//	pVtx[1].pos = D3DXVECTOR3(pos.x + width, pos.y - height, 0.0f);
-	//	pVtx[2].pos = D3DXVECTOR3(pos.x - width, pos.y + height, 0.0f);
-	//	pVtx[3].pos = D3DXVECTOR3(pos.x + width, pos.y + height, 0.0f);
-
-	//	// rhwの設定
-	//	pVtx[0].rhw = 1.0f;
-	//	pVtx[1].rhw = 1.0f;
-	//	pVtx[2].rhw = 1.0f;
-	//	pVtx[3].rhw = 1.0f;
-
-	//	float fA = (nCnt == 0) ? 1.0f : 0.8f;
-
-	//	// 頂点カラーの設定
-	//	pVtx[0].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, fA);
-	//	pVtx[1].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, fA);
-	//	pVtx[2].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, fA);
-	//	pVtx[3].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, fA);
-
-	//	// テクスチャ座標の設定
-	//	pVtx[0].tex = D3DXVECTOR2(0.0f, 0.0f);
-	//	pVtx[1].tex = D3DXVECTOR2(1.0f, 0.0f);
-	//	pVtx[2].tex = D3DXVECTOR2(0.0f, 1.0f);
-	//	pVtx[3].tex = D3DXVECTOR2(1.0f, 1.0f);
-
-	//	pVtx += 4;
-	//}
-	//// 頂点バッファのアンロック
-	//m_pVtxBuffMT->Unlock();
-
 	m_pImGui = new CImGuiManager;
 	m_pImGui->Init(hWnd, m_pD3DDevice);
 
@@ -290,37 +164,6 @@ void CRenderer::Uninit(void)
 
 	// すべてのオブジェクトの破棄
 	CObject::ReleaseAll();
-
-	for (int nCnt = 0; nCnt < NUM_TEXTUREMT; nCnt++)
-	{
-		// レンダリングターゲット用インターフェースの破棄
-		if (m_pRenderMT[nCnt]!= nullptr)
-		{
-			m_pRenderMT[nCnt]->Release();
-			m_pRenderMT[nCnt] = nullptr;
-		}
-
-		// レンダリングターゲット用テクスチャの破棄
-		if (m_pTextureMT[nCnt] != nullptr)
-		{
-			m_pTextureMT[nCnt]->Release();
-			m_pTextureMT[nCnt] = nullptr;
-		}
-	}
-
-	// レンダリングターゲット用Zバッファの破棄
-	if (m_pZBuffMT != nullptr)
-	{
-		m_pZBuffMT->Release();
-		m_pZBuffMT = nullptr;
-	}
-
-	// フィードバックエフェクト用頂点バッファの破棄
-	if (m_pVtxBuffMT != nullptr)
-	{
-		m_pVtxBuffMT->Release();
-		m_pVtxBuffMT = nullptr;
-	}
 
 	// Drectxデバイスの破棄
 	if (m_pD3DDevice != nullptr)
@@ -399,52 +242,6 @@ void CRenderer::Draw(const int fps)
 }
 
 //===================================================
-// レンダリングターゲットの変更
-//===================================================
-void CRenderer::ChangeTarget(D3DXVECTOR3 posV, D3DXVECTOR3 posR, D3DXVECTOR3 vecU)
-{
-	D3DXMATRIX mtxView, mtxProjection; // ビューマトリックス、プロジェクションマトリックス
-	float fAspect;
-
-	// レンダリングターゲットを生成したテクスチャに設定
-	m_pD3DDevice->SetRenderTarget(0, m_pRenderMT[0]);
-
-	// 生成したZバッファに設定
-	m_pD3DDevice->SetDepthStencilSurface(m_pZBuffMT);
-
-	// テクスチャレンダリング用ビューポートの設定
-	m_pD3DDevice->SetViewport(&m_viewport);
-
-	// ビューマトリックスの初期化
-	D3DXMatrixIdentity(&mtxView);
-
-	// プロジェクションマトリックスの初期化
-	D3DXMatrixIdentity(&mtxProjection);
-
-	// ビューマトリックスの作成
-	D3DXMatrixLookAtLH(
-		&mtxView,
-		&posV,
-		&posR,
-		&vecU);
-
-	// ビューマトリックスの設定
-	m_pD3DDevice->SetTransform(D3DTS_VIEW, &mtxView);
-
-	fAspect = (float)m_viewport.Width / (float)m_viewport.Height;
-
-	// プロジェクションマトリックスの作成
-	D3DXMatrixPerspectiveFovLH(&mtxProjection,
-		D3DXToRadian(45.0f),
-		fAspect,
-		1.0f,
-		100000.0f);
-
-	// プロジェクションマトリックスの設定
-	m_pD3DDevice->SetTransform(D3DTS_PROJECTION, &mtxProjection);
-}
-
-//===================================================
 // デバイスの取得処理
 //===================================================
 LPDIRECT3DDEVICE9 CRenderer::GetDevice(void)
@@ -501,6 +298,15 @@ void CRenderer::ResetDevice(void)
 		m_pDebug->Uninit();
 		delete m_pDebug;
 		m_pDebug = nullptr;
+	}
+
+	// テクスチャMTの取得
+	CTextureMTManager* pTextureMT = CManager::GetTextureMT();
+
+	// 取得できなかったら処理しない
+	if (pTextureMT != nullptr)
+	{
+		pTextureMT->Uninit();
 	}
 
 	ImGui_ImplDX9_InvalidateDeviceObjects();

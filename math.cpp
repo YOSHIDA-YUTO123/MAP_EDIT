@@ -211,3 +211,22 @@ void math::GetMouseRay(D3DXVECTOR3 *pRayOrigin,D3DXVECTOR3 *OutDir)
 	D3DXVECTOR3 Ray = vFar - vNear;
 	D3DXVec3Normalize(OutDir, &Ray);
 }
+
+//===================================================
+// スクリーン座標をワールド座標に変換
+//===================================================
+D3DXVECTOR3 math::ScreenToWorld(const D3DXVECTOR2 screen, const float fWorldY, const D3DVIEWPORT9 vp, const D3DXMATRIX view, const D3DXMATRIX proj)
+{
+	D3DXVECTOR3 nearPos(screen.x, screen.y, 0.0f);
+	D3DXVECTOR3 farPos(screen.x, screen.y, 1.0f);
+
+	D3DXVECTOR3 nearWorld, farWorld;
+
+	D3DXVec3Unproject(&nearWorld, &nearPos, &vp, &proj, &view, nullptr);
+	D3DXVec3Unproject(&farWorld, &farPos, &vp, &proj, &view, nullptr);
+
+	D3DXVECTOR3 dir = farWorld - nearWorld;
+	float t = (fWorldY - nearWorld.y) / dir.y;
+
+	return nearWorld + dir * t;
+}

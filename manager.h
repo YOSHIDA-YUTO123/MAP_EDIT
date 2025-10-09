@@ -27,6 +27,7 @@ class CInputJoypad;
 class CInputMouse;
 class CSound;
 class CTextureManager;
+class CTextureMTManager;
 class CLight;
 class CModelManager;
 class CCamera;
@@ -58,20 +59,21 @@ public:
 	static CLight* GetLight(void);
 	static CModelManager* GetModel(void);
 	static CDebugLog* GetDebugLog(void) { return m_pDebugLog; }
-
+	static CTextureMTManager* GetTextureMT(void) { return m_pTexutreMTManager; }
 private:
-	static CRenderer* m_pRenderer;				// レンダラーのポインタ
-	static CInputKeyboard* m_pInputKeyboard;	// キーボードのポインタ
-	static CInputJoypad* m_pInputJoypad;		// パッドのポインタ
-	static CInputMouse* m_pInputMouse;			// マウスのポインタ
-	static CSound* m_pSound;					// サウンドのポインタ
-	static CTextureManager* m_pTexture;			// テクスチャクラスへのポインタ	
-	static CCamera* m_pCamera;					// カメラのポインタ
-	static CLight* m_pLight;					// ライトへのポインタ
-	static CModelManager* m_pModel;				// モデルクラスへのポインタ
-	static CDebugLog* m_pDebugLog;				// デバッグログのクラスへのポインタ
-	static int m_nFrameCounter;					// フレームカウンター
-	static bool m_bShowDebug;					// デバッグ表示をするかしないか
-	int m_fps;									// fps格納用変数
+	static CRenderer* m_pRenderer;					// レンダラーのポインタ
+	static CInputKeyboard* m_pInputKeyboard;		// キーボードのポインタ
+	static CInputJoypad* m_pInputJoypad;			// パッドのポインタ
+	static CInputMouse* m_pInputMouse;				// マウスのポインタ
+	static CSound* m_pSound;						// サウンドのポインタ
+	static CTextureManager* m_pTexture;				// テクスチャクラスへのポインタ	
+	static CCamera* m_pCamera;						// カメラのポインタ
+	static CLight* m_pLight;						// ライトへのポインタ
+	static CModelManager* m_pModel;					// モデルクラスへのポインタ
+	static CDebugLog* m_pDebugLog;					// デバッグログのクラスへのポインタ
+	static CTextureMTManager* m_pTexutreMTManager;  // テクスチャMTのマネージャー
+	static int m_nFrameCounter;						// フレームカウンター
+	static bool m_bShowDebug;						// デバッグ表示をするかしないか
+	int m_fps;										// fps格納用変数
 };
 #endif

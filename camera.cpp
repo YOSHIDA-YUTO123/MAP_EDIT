@@ -242,11 +242,11 @@ void CCamera::MouseView(void)
 	}
 	else if (pMouse->OnMousePress(1))
 	{
-		//‰ñ“]—Ê‚ðXV
+		// ‰ñ“]—Ê‚ðXV
 		m_rot.y += fAngle.x * 0.01f;
 		m_rot.x += fAngle.y * 0.01f;
 
-		//‰ñ“]—Ê‚ð§ŒÀ
+		// ‰ñ“]—Ê‚ð§ŒÀ
 		if (m_rot.x > MAX_VIEW_TOP)
 		{
 			m_rot.x -= fAngle.y * 0.01f;

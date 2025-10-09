@@ -71,7 +71,6 @@ private:
 	void SetModelPathList(void);
 	void SetSelectObjAlv(void);
 	void SetInspector(void);
-	void UpdateEditMapObj(void);
 	bool CollisionMouse(void);
 	HRESULT Register(void);
 	void UpdateSelectObj(void);
@@ -79,12 +78,12 @@ private:
 	void Load(void);
 	void Erase(CMapObject* pObj);
 	void SetFilePath(void);
-	void SetCamerafocus(const bool bMode);
+	void SetCamerafocus(void);
+	void SetTextureIcon(CImGuiManager *pImgui);
 
 	static std::unique_ptr<CMapObjectManager> m_pInstance; // 自分のインスタンス
 	static std::vector<CMapObject*> m_pMapObjectList;	   // マップオブジェクトのリスト
 	static std::vector<std::string> m_aModelPath;		   // モデルのパスのリスト
-	CEditMapObject* m_pEditMapObj;						   // 編集用マップオブジェクト
 	CMapObject* m_pSelect;								   // 選択中のマップオブジェクト
 	float m_fMove;										   // 移動量
 	int m_nType;										   // モデルの種類

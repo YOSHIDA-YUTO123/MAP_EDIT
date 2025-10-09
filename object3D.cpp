@@ -120,8 +120,6 @@ void CObject3D::Draw(void)
 	pDevice->SetFVF(FVF_VERTEX_3D);
 
 #if 0
-	LPDIRECT3DTEXTURE9 pTextureMT = pRenderer->GetTextureMT();
-
 	// テクスチャ設定
 	pDevice->SetTexture(0, pTextureMT);
 #else

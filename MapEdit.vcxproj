@@ -162,6 +162,7 @@
     <ClCompile Include="debugproc.cpp" />
     <ClCompile Include="dome.cpp" />
     <ClCompile Include="EditMapObject.cpp" />
+    <ClCompile Include="IconModel.cpp" />
     <ClCompile Include="imgui.cpp" />
     <ClCompile Include="imguimaneger.cpp" />
     <ClCompile Include="imgui_demo.cpp" />
@@ -205,6 +206,7 @@
     <ClCompile Include="sound.cpp" />
     <ClCompile Include="statebase.cpp" />
     <ClCompile Include="textureManager.cpp" />
+    <ClCompile Include="TextureMTManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="billboard.h" />
@@ -219,6 +221,7 @@
     <ClInclude Include="debugproc.h" />
     <ClInclude Include="dome.h" />
     <ClInclude Include="EditMapObject.h" />
+    <ClInclude Include="IconModel.h" />
     <ClInclude Include="imconfig.h" />
     <ClInclude Include="imgui.h" />
     <ClInclude Include="imguimaneger.h" />
@@ -259,6 +262,7 @@
     <ClInclude Include="sound.h" />
     <ClInclude Include="statebase.h" />
     <ClInclude Include="textureManager.h" />
+    <ClInclude Include="TextureMTManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="imgui.ini" />

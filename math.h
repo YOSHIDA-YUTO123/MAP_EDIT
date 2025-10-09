@@ -124,7 +124,7 @@ namespace math
 	D3DXVECTOR3 GetVector(const D3DXVECTOR3 dest, const D3DXVECTOR3 pos);
 	float GetTargetAngle(const D3DXVECTOR3 dest, const D3DXVECTOR3 pos); // 目標までの角度の取得
 	D3DXVECTOR3 GetPositionFromMatrix(const D3DXMATRIX mtxWorld);		 // MATRIXの位置の情報をD3DXVECTOR3型に変換する
-	D3DXQUATERNION CreateQuaternion(D3DXQUATERNION* pOut, D3DXVECTOR3 axis, float fAngle); 
+	D3DXQUATERNION CreateQuaternion(D3DXQUATERNION* pOut, D3DXVECTOR3 axis, float fAngle);
 	D3DXMATRIX SetMatrixRotationQuaternion(D3DXMATRIX* pOut, D3DXQUATERNION quaternion);
 	D3DXVECTOR3 MatrixToEulerXYZ(const D3DXMATRIX mtxWorld);			// 回転行列をオイラー角に変換
 
@@ -134,5 +134,16 @@ namespace math
 	/// <param name="pRayOrigin"></param>
 	/// <param name="OutDir"></param>
 	void GetMouseRay(D3DXVECTOR3* pRayOrigin, D3DXVECTOR3* OutDir);
-}
+
+	/// <summary>
+	/// スクリーン座標をワールド座標に変換
+	/// </summary>
+	/// <param name="screen"></param>
+	/// <param name="fWorldY"></param>
+	/// <param name="vp"></param>
+	/// <param name="view"></param>
+	/// <param name="proj"></param>
+	/// <returns>変換座標</returns>
+	D3DXVECTOR3 ScreenToWorld(const D3DXVECTOR2 screen, const float fWorldY, const D3DVIEWPORT9 vp, const D3DXMATRIX view, const D3DXMATRIX proj);
+};
 #endif
