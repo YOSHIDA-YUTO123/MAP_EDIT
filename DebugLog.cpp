@@ -66,8 +66,6 @@ void CDebugLog::Update(void)
 	// null‚¾‚Á‚½‚çˆ—‚µ‚È‚¢
 	if (pImgui == nullptr) return;
 
-	ImGuiIO& io = ImGui::GetIO();
-
 	pImgui->SetSize(ImVec2(200.0f, 200.0f));
 	pImgui->SetPosition(ImVec2(1080.0f, 0.0f));
 

@@ -228,7 +228,7 @@ void CRenderer::Draw(const int fps)
 #ifdef _DEBUG
 		CDebugProc::Print("FPS = %d\n", fps);
 
-		CDebugProc::Draw();
+		//CDebugProc::Draw();
 #endif // _DEBUG
 
 		CDebugProc::Reset();

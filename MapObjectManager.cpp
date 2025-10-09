@@ -121,7 +121,7 @@ void CMapObjectManager::Update(void)
 	// ウィンドウの設定
 	pImgui->SetPosition(ImVec2(0.0f, 0.0f));
 	pImgui->SetSize(ImVec2(400.0f, 500.0f));
-	pImgui->Start("aaa", CImGuiManager::TYPE_NOMOVEANDSIZE);
+	pImgui->Start(u8"インスペクター", CImGuiManager::TYPE_NOMOVEANDSIZE);
 
 	// キーボードの取得
 	CInputMouse* pMouse = CManager::GetInputMouse();
@@ -147,16 +147,21 @@ void CMapObjectManager::Update(void)
 	// カメラのフォーカス処理
 	SetCamerafocus();
 
-	// アイコンの設定処理
-	SetTextureIcon(pImgui);
-
-	if (ImGui::RadioButton(u8"オブジェクトを平面で移動させる", m_bDragMoveXZ))
+	if (ImGui::Checkbox(u8"オブジェクトを平面で移動させる", &m_bDragMoveXZ))
 	{
-		// 状態の切り替え
-		m_bDragMoveXZ = m_bDragMoveXZ ? false : true;
+		//// 状態の切り替え
+		//m_bDragMoveXZ = m_bDragMoveXZ ? false : true;
+	}
+	else if (pKeyboard->GetPress(DIK_LSHIFT))
+	{
+		m_bDragMoveXZ = true;
+	}
+	else if(pKeyboard->GetRelease(DIK_LSHIFT))
+	{
+		m_bDragMoveXZ = false;
 	}
 
-	if (ImGui::BeginTabBar("test0000"))
+	if (ImGui::BeginTabBar("test000"))
 	{
 		if (ImGui::BeginTabItem(u8"配置オブジェクト設定"))
 		{
@@ -227,6 +232,20 @@ void CMapObjectManager::Update(void)
 	}
 
 	// 終了処理
+	pImgui->End();
+
+	// ウィンドウの設定
+	pImgui->SetPosition(ImVec2(0.0f,500.0f));
+
+	ImVec2 window = ImGui::GetWindowSize();
+	float fHeight = SCREEN_HEIGHT - 500.0f;
+
+	pImgui->SetSize(ImVec2(400.0f, fHeight));
+	pImgui->Start("Asset", CImGuiManager::TYPE_NOMOVEANDSIZE);
+
+	// アイコンの設定処理
+	SetTextureIcon(pImgui);
+
 	pImgui->End();
 }
 
@@ -696,6 +715,8 @@ void CMapObjectManager::SetTextureIcon(CImGuiManager* pImgui)
 		pTextureMT->GetAddress(modelList.filepath);
 	}
 
+	int nCnt = 0;
+
 	for (auto& modelList : pTextureMT->GetList())
 	{
 		// モデルの名前の取得
@@ -703,7 +724,21 @@ void CMapObjectManager::SetTextureIcon(CImGuiManager* pImgui)
 
 		// テクスチャのアイコンの表示
 		pImgui->ShowTextureIcon(pTextureMT->GetAddress(pModelName), pModelName);
+
+		// 3つ表示していないなら
+		if (nCnt != 3)
+		{
+			ImGui::SameLine();
+			nCnt++;
+		}
+		else
+		{
+			nCnt = 0;
+		}
 	}
+
+	// 改行
+	ImGui::NewLine();
 }
 
 //===================================================

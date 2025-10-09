@@ -99,13 +99,19 @@ LPDIRECT3DTEXTURE9 CTextureMTManager::GetAddress(const char* pName)
 //===================================================
 void CTextureMTManager::ChangeTarget(D3DXVECTOR3 posV, D3DXVECTOR3 posR, D3DXVECTOR3 vecU,const char *pName)
 {
+	if (m_aInfo.empty())
+	{
+		GetAddress(pName);
+		return;
+	}
+
+	// デバイスの取得
+	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
+
 	for (auto& list : m_aInfo)
 	{
 		if (list.aName == pName)
 		{
-			// デバイスの取得
-			LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
-
 			D3DXMATRIX mtxView, mtxProjection; // ビューマトリックス、プロジェクションマトリックス
 			float fAspect;
 
@@ -146,7 +152,17 @@ void CTextureMTManager::ChangeTarget(D3DXVECTOR3 posV, D3DXVECTOR3 posR, D3DXVEC
 			// プロジェクションマトリックスの設定
 			pDevice->SetTransform(D3DTS_PROJECTION, &mtxProjection);
 		}
+		else
+		{
+			GetAddress(pName);
+		}
 	}
+
+	// レンダリングターゲット用テクスチャのクリア
+	pDevice->Clear(0,
+		NULL,
+		(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER | D3DCLEAR_STENCIL),
+		D3DCOLOR_RGBA(100, 100, 100, 255), 1.0f, 0);
 }
 
 //===================================================
