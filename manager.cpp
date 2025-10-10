@@ -30,6 +30,7 @@
 #include "EditMapObject.h"
 #include "DebugLog.h"
 #include "TextureMTManager.h"
+#include "edit.h"
 
 using namespace Const;			// 名前空間Constを使用する
 using namespace std;			// 名前空間stdを使用する
@@ -50,6 +51,7 @@ CLight* CManager::m_pLight = nullptr;					// カメラへのポインタ
 CModelManager* CManager::m_pModel = nullptr;			// モデルのクラスへのポインタ
 CDebugLog* CManager::m_pDebugLog = nullptr;				// デバッグログのクラスへのポインタ
 CTextureMTManager* CManager::m_pTexutreMTManager = nullptr; // テクスチャMTのクラスへのポインタ
+CMeshField* CManager::m_pMeshField = nullptr;				// メッシュフィールドへのポインタ
 
 //===================================================
 // コンストラクタ
@@ -128,10 +130,13 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 	m_pLight->Init();
 	m_pLight->SetDirectional(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(0.0f, -1.0f, 0.0f), D3DXVECTOR3(0.0f, 100.0f, 0.0f));
 
+	CEdit::Create();
+
 	// デバッグログの生成
  	m_pDebugLog = CDebugLog::Create();
 
-	CMeshField::Create(VEC3_NULL, 1, 1, D3DXVECTOR2(2000.0f, 2000.0f));
+	// メッシュフィールドの生成
+	m_pMeshField = CMeshField::Create(VEC3_NULL, 1, 1, D3DXVECTOR2(2000.0f, 2000.0f));
 
 	CMeshDome::Create(VEC3_NULL, 8, 8, 10000.0f, 5000.0f);
 
@@ -308,15 +313,6 @@ void CManager::Update(void)
 	if (m_pLight != nullptr)
 	{	// ライトの更新処理
 		m_pLight->Update();
-	}
-
-	// インスタンスの取得
-	CMapObjectManager* pMapObjManager = CMapObjectManager::GetInstance();
-
-	if (pMapObjManager != nullptr)
-	{
-		// 更新処理
-		pMapObjManager->Update();
 	}
 
 	if (pImgui != nullptr)

@@ -157,8 +157,11 @@ bool CImGuiManager::GetActiveWindow(void)
 {
 	ImGuiIO& io = ImGui::GetIO();
 
+	bool beingMoved = ImGui::IsWindowFocused() && ImGui::IsMouseDragging(ImGuiMouseButton_Left);
+	bool beingResized = ImGui::IsWindowFocused() && ImGui::IsWindowHovered();
+
 	// IMGUIのウィンドウを操作している
-	if (io.WantCaptureMouse && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+	if (io.WantCaptureMouse || beingMoved || beingResized)
 	{
 		return true;
 	}

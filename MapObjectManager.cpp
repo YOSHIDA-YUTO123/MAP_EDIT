@@ -118,11 +118,6 @@ void CMapObjectManager::Update(void)
 	// 取得できなかったら処理しない
 	if (pImgui == nullptr) return;
 
-	// ウィンドウの設定
-	pImgui->SetPosition(ImVec2(0.0f, 0.0f));
-	pImgui->SetSize(ImVec2(400.0f, 500.0f));
-	pImgui->Start(u8"インスペクター", CImGuiManager::TYPE_NOMOVEANDSIZE);
-
 	// キーボードの取得
 	CInputMouse* pMouse = CManager::GetInputMouse();
 
@@ -232,23 +227,6 @@ void CMapObjectManager::Update(void)
 			Load();
 		}
 	}
-
-	// 終了処理
-	pImgui->End();
-
-	// ウィンドウの設定
-	pImgui->SetPosition(ImVec2(0.0f,500.0f));
-
-	ImVec2 window = ImGui::GetWindowSize();
-	float fHeight = SCREEN_HEIGHT - 500.0f;
-
-	pImgui->SetSize(ImVec2(400.0f, fHeight));
-	pImgui->Start("Asset", CImGuiManager::TYPE_NOMOVEANDSIZE);
-
-	// アイコンの設定処理
-	SetTextureIcon(pImgui);
-
-	pImgui->End();
 }
 
 //===================================================

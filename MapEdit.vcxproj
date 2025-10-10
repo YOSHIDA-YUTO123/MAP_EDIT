@@ -161,6 +161,7 @@
     <ClCompile Include="DebugLog.cpp" />
     <ClCompile Include="debugproc.cpp" />
     <ClCompile Include="dome.cpp" />
+    <ClCompile Include="edit.cpp" />
     <ClCompile Include="EditMapObject.cpp" />
     <ClCompile Include="IconModel.cpp" />
     <ClCompile Include="imgui.cpp" />
@@ -220,6 +221,7 @@
     <ClInclude Include="DebugLog.h" />
     <ClInclude Include="debugproc.h" />
     <ClInclude Include="dome.h" />
+    <ClInclude Include="edit.h" />
     <ClInclude Include="EditMapObject.h" />
     <ClInclude Include="IconModel.h" />
     <ClInclude Include="imconfig.h" />

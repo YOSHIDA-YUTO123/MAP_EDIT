@@ -44,7 +44,9 @@ public:
 	void SetCylinder(const int nSegH, const int nSegV, const float fRadius, const float fHeight);
 	bool Collision(D3DXVECTOR3* pPos);
 	void SetTextureID(const char* pTextureName);
-
+	void Show(const bool bEnable) { m_bShow = bEnable; }
+	void SetPosition(const D3DXVECTOR3 pos) { m_pos = pos; }
+	void SetRadius(const float fRadius) { m_fRadius = fRadius; }
 private:
 	LPDIRECT3DVERTEXBUFFER9 m_pVtxBuffer;	// 頂点バッファへのポインタ
 	LPDIRECT3DINDEXBUFFER9 m_pIdxBuffer;	// インデックスバッファへのポインタ
@@ -61,5 +63,6 @@ private:
 	int m_nNumPolygon;						// ポリゴン数
 	int m_nNumIdx;							// インデックス数
 	int m_nTextureIdx;						// テクスチャのID
+	bool m_bShow;							// 表示するかどうか
 };
 #endif

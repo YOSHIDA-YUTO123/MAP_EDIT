@@ -63,6 +63,9 @@ public:
 	/// </summary>
 	/// <returns>判定結果</returns>
 	bool GetDragMoveState(void) const { return m_bDragMoveXZ; }
+
+	void SetTextureIcon(CImGuiManager* pImgui);
+
 private:
 	static constexpr float MOVE_VALUE = 5.0f; // 移動量
 
@@ -80,7 +83,6 @@ private:
 	void Erase(CMapObject* pObj);
 	void SetFilePath(void);
 	void SetCamerafocus(void);
-	void SetTextureIcon(CImGuiManager *pImgui);
 	void CopyAndPaste(CInputKeyboard* pKeyboard);
 
 	static std::unique_ptr<CMapObjectManager> m_pInstance; // 自分のインスタンス

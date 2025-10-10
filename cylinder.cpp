@@ -24,6 +24,7 @@ using namespace std;   // 名前空間stdを使用
 //================================================
 CMeshCylinder::CMeshCylinder(int nPriority) : CObject(nPriority)
 {
+	m_bShow = false;
 	m_fHeight = NULL;
 	m_Type = TYPE_WALL;
 	m_pos = VEC3_NULL;
@@ -152,7 +153,7 @@ HRESULT CMeshCylinder::Init(void)
 			pVtx[nCntVtx].nor = nor;
 
 			// 色の設定
-			pVtx[nCntVtx].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f);
+			pVtx[nCntVtx].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.5f);
 
 			// テクスチャ座標の設定
 			pVtx[nCntVtx].tex = D3DXVECTOR2((fTexPosX * nCntH), (fTexPosY * nCntV));
@@ -230,6 +231,46 @@ void CMeshCylinder::Uninit(void)
 //================================================
 void CMeshCylinder::Update(void)
 {
+	int nCntVtx = 0;
+
+	VERTEX_3D* pVtx = NULL;
+
+	// 頂点バッファをロック
+	m_pVtxBuffer->Lock(0, 0, (void**)&pVtx, 0);
+
+	// 縦の分割数分回す
+	for (int nCntV = 0; nCntV <= m_nSegV; nCntV++)
+	{
+		for (int nCntH = 0; nCntH <= m_nSegH; nCntH++)
+		{
+			// 計算用の位置
+			D3DXVECTOR3 posWk = VEC3_NULL;
+
+			// 横の分割数
+			float fAngle = (D3DX_PI * 2.0f) / m_nSegH * nCntH;
+
+			posWk.x = sinf(fAngle) * m_fRadius;
+			posWk.y = m_fHeight - (m_fHeight / m_nSegV * nCntV);
+			posWk.z = cosf(fAngle) * m_fRadius;
+
+			// 位置の設定
+			pVtx[nCntVtx].pos = posWk;
+
+			// 頂点までの方向を求める
+			D3DXVECTOR3 nor = pVtx[nCntVtx].pos - m_pos;
+
+			// 方向ベクトルにする
+			D3DXVec3Normalize(&nor, &nor);
+
+			// 法線の設定
+			pVtx[nCntVtx].nor = nor;
+
+			nCntVtx++;
+		}
+	}
+
+	// 頂点バッファをアンロック
+	m_pVtxBuffer->Unlock();
 }
 
 //================================================
@@ -237,11 +278,17 @@ void CMeshCylinder::Update(void)
 //================================================
 void CMeshCylinder::Draw(void)
 {
+	// 見えないなら処理しない
+	if (!m_bShow) return;
+
 	// デバイスの取得
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
 	// テクスチャクラスの取得
 	CTextureManager* pTexture = CManager::GetTexture();
+
+	// ライトの影響をうけない
+	pDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
 
 	//計算用のマトリックス
 	D3DXMATRIX mtxRot, mtxTrans;
@@ -284,6 +331,9 @@ void CMeshCylinder::Draw(void)
 
 	//ポリゴンの描画
 	pDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, 0, m_nNumVtx, 0, m_nNumPolygon);
+
+	// もとに戻す
+	pDevice->SetRenderState(D3DRS_LIGHTING, TRUE);
 }
 
 //================================================

@@ -32,6 +32,7 @@ class CLight;
 class CModelManager;
 class CCamera;
 class CDebugLog;
+class CMeshField;
 
 //***************************************************
 // マネージャークラスの定義
@@ -60,6 +61,8 @@ public:
 	static CModelManager* GetModel(void);
 	static CDebugLog* GetDebugLog(void) { return m_pDebugLog; }
 	static CTextureMTManager* GetTextureMT(void) { return m_pTexutreMTManager; }
+	static CMeshField* GetMeshField(void) { return m_pMeshField; }
+
 private:
 	static CRenderer* m_pRenderer;					// レンダラーのポインタ
 	static CInputKeyboard* m_pInputKeyboard;		// キーボードのポインタ
@@ -71,6 +74,7 @@ private:
 	static CLight* m_pLight;						// ライトへのポインタ
 	static CModelManager* m_pModel;					// モデルクラスへのポインタ
 	static CDebugLog* m_pDebugLog;					// デバッグログのクラスへのポインタ
+	static CMeshField* m_pMeshField;				// メッシュフィールドクラスへのポインタ
 	static CTextureMTManager* m_pTexutreMTManager;  // テクスチャMTのマネージャー
 	static int m_nFrameCounter;						// フレームカウンター
 	static bool m_bShowDebug;						// デバッグ表示をするかしないか

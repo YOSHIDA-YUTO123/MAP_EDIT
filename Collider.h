@@ -68,6 +68,7 @@ public:
 	static std::unique_ptr<CColliderSphere> Create(const D3DXVECTOR3 pos,const float fRadius);
 	static CColliderSphere CreateCollider(const D3DXVECTOR3 pos, const float fRadius);
 	float GetRadius(void) const { return m_fRadius; }
+	void SetRadius(const float fRadius) { m_fRadius = fRadius; }
 private:
 	float m_fRadius;	// ”¼Œa
 };

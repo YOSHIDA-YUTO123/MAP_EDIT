@@ -21,6 +21,8 @@
 #include "textureManager.h" 
 #include "Collision.h"
 #include <string>
+#include <fstream>
+#include <iomanip>
 
 using namespace Const;		// 名前空間Constを使用する
 using namespace std;		// 名前空間stdを使用する
@@ -41,6 +43,7 @@ namespace
 //================================================
 CMeshField::CMeshField(int nPriority) : CObject(nPriority)
 {
+	ZeroMemory(&m_fSaveHeight, sizeof(m_fSaveHeight));
 	D3DXMatrixIdentity(&m_mtxWorld);
 	m_pIdxBuffer = nullptr;
 	m_pVtxBuffer = nullptr;
@@ -141,9 +144,6 @@ HRESULT CMeshField::Init(void)
 	float fTexPosX = 1.0f / m_nSegH;
 	float fTexPosY = 1.0f / m_nSegV;
 
-	// 計算用の位置
-	D3DXVECTOR3 posWk;
-
 	VERTEX_3D* pVtx = NULL;
 
 	// 頂点バッファをロック
@@ -153,9 +153,12 @@ HRESULT CMeshField::Init(void)
 	{
 		for (int nCntX = 0; nCntX <= m_nSegH; nCntX++)
 		{
+			// 計算用の位置
+			D3DXVECTOR3 posWk = pVtx[nCntVtx].pos;
+
 			// 位置の設定
 			posWk.x = ((m_Size.x / m_nSegH) * nCntX) - (m_Size.x * 0.5f);
-			posWk.y = m_pos.y;
+			posWk.y = m_fSaveHeight[nCntVtx];
 			posWk.z = m_Size.y - ((m_Size.y / m_nSegV) * nCntZ) - (m_Size.y * 0.5f);
 
 			pVtx[nCntVtx].pos = posWk;
@@ -242,6 +245,37 @@ void CMeshField::Uninit(void)
 //================================================
 void CMeshField::Update(void)
 {
+	// 頂点のカウント
+	int nCntVtx = 0;
+
+	VERTEX_3D* pVtx = NULL;
+
+	// 頂点バッファをロック
+	m_pVtxBuffer->Lock(0, 0, (void**)&pVtx, 0);
+
+	for (int nCntZ = 0; nCntZ <= m_nSegV; nCntZ++)
+	{
+		for (int nCntX = 0; nCntX <= m_nSegH; nCntX++)
+		{
+			// 計算用の位置
+			D3DXVECTOR3 posWk = pVtx[nCntVtx].pos;
+
+			// 位置の設定
+			posWk.x = ((m_Size.x / m_nSegH) * nCntX) - (m_Size.x * 0.5f);
+			posWk.z = m_Size.y - ((m_Size.y / m_nSegV) * nCntZ) - (m_Size.y * 0.5f);
+
+			pVtx[nCntVtx].pos = posWk;
+
+			// 高さを保持
+			m_fSaveHeight[nCntVtx] = posWk.y;
+
+			nCntVtx++;
+		}
+	}
+
+	// 頂点バッファをアンロック
+	m_pVtxBuffer->Unlock();
+
 	// 法線の再設定
 	UpdateNor();
 }
@@ -736,3 +770,262 @@ void CMeshField::SetTextureID(const char* pTextureName)
 		m_nTextureIdx = pTexture->Register(filePath.c_str());
 	}
 }
+
+//================================================
+// 頂点数の設定
+//================================================
+void CMeshField::SetSegment(const int nSegH, const int nSegV)
+{
+	// 頂点数の設定
+	m_nNumVtx = (nSegH + 1) * (nSegV + 1);
+
+	// ポリゴン数の設定
+	m_nNumPolygon = ((nSegH * nSegV) * 2) + (4 * (nSegV - 1));
+
+	// インデックス数の設定
+	m_nNumIdx = m_nNumPolygon + 2;
+
+	m_nSegH = nSegH;
+	m_nSegV = nSegV;
+
+	// 頂点バッファの破棄
+	if (m_pVtxBuffer != nullptr)
+	{
+		m_pVtxBuffer->Release();
+		m_pVtxBuffer = nullptr;
+	}
+
+	// インデックスバッファの破棄
+	if (m_pIdxBuffer != nullptr)
+	{
+		m_pIdxBuffer->Release();
+		m_pIdxBuffer = nullptr;
+	}
+
+	// 初期化処理
+	if (FAILED(Init()))
+	{
+		return;
+	}
+}
+
+//================================================
+// 分割の設定
+//================================================
+void CMeshField::SetSegment(void)
+{
+	// 頂点数の設定
+	m_nNumVtx = (m_nSegH + 1) * (m_nSegV + 1);
+
+	// ポリゴン数の設定
+	m_nNumPolygon = ((m_nSegH * m_nSegV) * 2) + (4 * (m_nSegV - 1));
+
+	// インデックス数の設定
+	m_nNumIdx = m_nNumPolygon + 2;
+
+	// 頂点バッファの破棄
+	if (m_pVtxBuffer != nullptr)
+	{
+		m_pVtxBuffer->Release();
+		m_pVtxBuffer = nullptr;
+	}
+
+	// インデックスバッファの破棄
+	if (m_pIdxBuffer != nullptr)
+	{
+		m_pIdxBuffer->Release();
+		m_pIdxBuffer = nullptr;
+	}
+
+	// 初期化処理
+	if (FAILED(Init()))
+	{
+		return;
+	}
+}
+
+//================================================
+// 頂点の判定
+//================================================
+void CMeshField::SetVtxHeight(CColliderSphere* pSphere, const float AddHeightValue)
+{
+	// 頂点のカウント
+	int nCntVtx = 0;
+
+	VERTEX_3D* pVtx = NULL;
+
+	// 頂点バッファをロック
+	m_pVtxBuffer->Lock(0, 0, (void**)&pVtx, 0);
+
+	for (int nCntZ = 0; nCntZ <= m_nSegV; nCntZ++)
+	{
+		for (int nCntX = 0; nCntX <= m_nSegH; nCntX++)
+		{
+			// y座標は考慮しない
+			D3DXVECTOR3 vtxPos(pVtx[nCntVtx].pos.x, 0.0f, pVtx[nCntVtx].pos.z);
+
+			// 頂点のコライダーの生成
+			CColliderSphere sphere = CColliderSphere::CreateCollider(vtxPos, 10.0f);
+
+			// 当たっていたら
+			if (CCollisionSphere::Collision(&sphere, pSphere))
+			{
+				// 高さの設定
+				pVtx[nCntVtx].pos.y += AddHeightValue;
+			}
+
+			nCntVtx++;
+		}
+	}
+
+	// 頂点バッファをアンロック
+	m_pVtxBuffer->Unlock();
+}
+
+//================================================
+// 頂点カラーの設定
+//================================================
+void CMeshField::SetVtxColor(CColliderSphere* pSphere, const D3DXCOLOR col)
+{
+	// 頂点のカウント
+	int nCntVtx = 0;
+
+	VERTEX_3D* pVtx = NULL;
+
+	// 頂点バッファをロック
+	m_pVtxBuffer->Lock(0, 0, (void**)&pVtx, 0);
+
+	for (int nCntZ = 0; nCntZ <= m_nSegV; nCntZ++)
+	{
+		for (int nCntX = 0; nCntX <= m_nSegH; nCntX++)
+		{
+			// y座標は考慮しない
+			D3DXVECTOR3 vtxPos(pVtx[nCntVtx].pos.x, 0.0f, pVtx[nCntVtx].pos.z);
+
+			// 頂点のコライダーの生成
+			CColliderSphere sphere = CColliderSphere::CreateCollider(vtxPos, 10.0f);
+
+			// 当たっていたら
+			if (CCollisionSphere::Collision(&sphere, pSphere))
+			{
+				// 高さの設定
+				pVtx[nCntVtx].col = col;
+			}
+
+			nCntVtx++;
+		}
+	}
+
+	// 頂点バッファをアンロック
+	m_pVtxBuffer->Unlock();
+}
+
+//================================================
+// 頂点情報のセーブ
+//================================================
+void CMeshField::Save(void)
+{
+	std::ofstream file("data/TXT/field.txt");
+
+	int nCntVtx = 0;
+
+	// ファイルが開けたら
+	if (file.is_open())
+	{
+		VERTEX_3D* pVtx = NULL;
+
+		file << std::fixed << std::showpoint << std::setprecision(2);
+		file << "SEGMENT_H = " << m_nSegH << "\n";
+		file << "SEGMENT_V = " << m_nSegV << "\n";
+		file << "SIZE = " << m_Size.x << " " << m_Size.y << "\n\n";
+		file << "VERTEX_SET" << "\n";
+
+		// 頂点バッファをロック
+		m_pVtxBuffer->Lock(0, 0, (void**)&pVtx, 0);
+
+		for (int nCntZ = 0; nCntZ <= m_nSegV; nCntZ++)
+		{
+			for (int nCntX = 0; nCntX <= m_nSegH; nCntX++)
+			{
+				file << std::fixed << std::showpoint << std::setprecision(6) << pVtx[nCntVtx].pos.y << "\n";
+
+				nCntVtx++;
+			}
+		}
+		file << "END_VERTEX_SET" << "\n";
+
+		// 頂点バッファをアンロック
+		m_pVtxBuffer->Unlock();
+
+		file.clear();
+		file.close();
+	}
+}
+
+//================================================
+// 頂点情報の読み込み
+//================================================
+void CMeshField::Load(void)
+{
+	std::fstream file("data/TXT/field.txt");
+	std::string line;
+
+	// ファイルが開けたら
+	if (!file.is_open())
+	{
+		MessageBox(NULL, "エラー", "ファイルが開けませんでした", MB_OK);
+
+		return;
+	}
+
+	// ファイルを読み取る
+	while (std::getline(file,line))
+	{
+		if (line.find("SEGMENT_H") != std::string::npos)
+		{
+			// = の位置を求める
+			size_t pos = line.find('=');
+
+			m_nSegH = std::stoi(line.substr(pos + 1));
+		}
+		if (line.find("SEGMENT_V") != std::string::npos)
+		{
+			// = の位置を求める
+			size_t pos = line.find('=');
+
+			m_nSegV = std::stoi(line.substr(pos + 1));
+		}
+
+		if (line.find("SIZE") != std::string::npos)
+		{
+			size_t pos = line.find('=');
+
+			if (pos != std::string::npos)
+			{
+				// = から先を求める
+				std::istringstream input(line.substr(pos + 1));
+				input >> m_Size.x >> m_Size.y;
+			}
+		}
+
+		int nCntVtx = 0;
+
+		if (line.find("VERTEX_SET") != std::string::npos)
+		{
+			while (std::getline(file, line))
+			{
+				if (line.find("END_VERTEX_SET") != std::string::npos) break;
+
+				file >> m_fSaveHeight[nCntVtx];
+				nCntVtx++;
+			}
+		}
+	}
+
+		SetSegment();
+
+		file.clear();
+		file.close();
+
+}
+
