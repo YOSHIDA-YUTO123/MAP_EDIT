@@ -1,6 +1,9 @@
 {
     "MODEL_INFO": [
         {
+            "file_name": "data/MODEL/takkyu.x"
+        },
+        {
             "file_name": "data/MODEL/test000.x"
         },
         {
@@ -11,63 +14,6 @@
         },
         {
             "file_name": "data/MODEL/test003.x"
-        },
-        {
-            "file_name": "data/MODEL/00_waist.x"
-        },
-        {
-            "file_name": "data/MODEL/02_head.x"
-        },
-        {
-            "file_name": "data/MODEL/dust000.x"
-        },
-        {
-            "file_name": "data/MODEL/dust001.x"
-        },
-        {
-            "file_name": "data/MODEL/dust002.x"
-        },
-        {
-            "file_name": "data/MODEL/dust003.x"
-        },
-        {
-            "file_name": "data/MODEL/dust004.x"
-        },
-        {
-            "file_name": "data/MODEL/dust005.x"
-        },
-        {
-            "file_name": "data/MODEL/dust006.x"
-        },
-        {
-            "file_name": "data/MODEL/dust007.x"
-        },
-        {
-            "file_name": "data/MODEL/gate000.x"
-        },
-        {
-            "file_name": "data/MODEL/gear000.x"
-        },
-        {
-            "file_name": "data/MODEL/light000.x"
-        },
-        {
-            "file_name": "data/MODEL/monument.x"
-        },
-        {
-            "file_name": "data/MODEL/monument001.x"
-        },
-        {
-            "file_name": "data/MODEL/pillar000.x"
-        },
-        {
-            "file_name": "data/MODEL/spear_rack.x"
-        },
-        {
-            "file_name": "data/MODEL/sword_rack.x"
-        },
-        {
-            "file_name": "data/MODEL/sword_rack001.x"
         }
     ]
 }

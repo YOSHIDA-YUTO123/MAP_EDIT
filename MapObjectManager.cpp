@@ -147,6 +147,8 @@ void CMapObjectManager::Update(void)
 	// カメラのフォーカス処理
 	SetCamerafocus();
 
+	CopyAndPaste(pKeyboard);
+
 	if (ImGui::Checkbox(u8"オブジェクトを平面で移動させる", &m_bDragMoveXZ))
 	{
 		//// 状態の切り替え
@@ -254,6 +256,7 @@ void CMapObjectManager::Update(void)
 //===================================================
 CMapObjectManager::CMapObjectManager()
 {
+	m_pCopyObj = nullptr;
 	m_fMove = MOVE_VALUE;
 	m_bDragMoveXZ = false;
 	m_pSelect = nullptr;
@@ -739,6 +742,32 @@ void CMapObjectManager::SetTextureIcon(CImGuiManager* pImgui)
 
 	// 改行
 	ImGui::NewLine();
+}
+
+//===================================================
+// コピーペースト処理
+//===================================================
+void CMapObjectManager::CopyAndPaste(CInputKeyboard *pKeyboard)
+{
+	// 選択されていなかったら処理しない
+	if (m_pCopyObj != nullptr && pKeyboard->GetPress(DIK_LCONTROL) && pKeyboard->GetTrigger(DIK_V))
+	{
+		// 位置の取得
+		D3DXVECTOR3 pos = m_pCopyObj->GetPosition();
+		D3DXVECTOR3 rot = m_pCopyObj->GetRotation();
+
+		// パスの取得
+		const char* pModelPath = m_pCopyObj->GetPath();
+
+		// 生成
+		Create(pos, rot, pModelPath);
+	}
+
+	// ctrl + c
+	if (pKeyboard->GetPress(DIK_LCONTROL) && pKeyboard->GetTrigger(DIK_C))
+	{
+		m_pCopyObj = m_pSelect;
+	}
 }
 
 //===================================================

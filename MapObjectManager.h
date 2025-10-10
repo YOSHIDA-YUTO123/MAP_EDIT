@@ -25,6 +25,7 @@
 class CMapObject;
 class CImGuiManager;
 class CEditMapObject;
+class CInputKeyboard;
 
 //***************************************************
 // マップオブジェクトのリストクラス
@@ -80,11 +81,13 @@ private:
 	void SetFilePath(void);
 	void SetCamerafocus(void);
 	void SetTextureIcon(CImGuiManager *pImgui);
+	void CopyAndPaste(CInputKeyboard* pKeyboard);
 
 	static std::unique_ptr<CMapObjectManager> m_pInstance; // 自分のインスタンス
 	static std::vector<CMapObject*> m_pMapObjectList;	   // マップオブジェクトのリスト
 	static std::vector<std::string> m_aModelPath;		   // モデルのパスのリスト
 	CMapObject* m_pSelect;								   // 選択中のマップオブジェクト
+	CMapObject* m_pCopyObj;								   // コピーしたオブジェクトの情報
 	float m_fMove;										   // 移動量
 	int m_nType;										   // モデルの種類
 	bool m_bDragMoveXZ;									   // ドラッグ移動をXZ平面にするか

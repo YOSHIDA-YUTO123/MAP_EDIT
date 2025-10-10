@@ -373,6 +373,7 @@ void CMain::DropXFile(HWND hWnd, WPARAM wParam)
 				// ƒ‚ƒfƒ‹‚Ì“o˜^
 				pModelManager->Register(relative);
 				relative = nullptr;
+				ZeroMemory(&filePath, sizeof(filePath));
 			}
 		}
 	}

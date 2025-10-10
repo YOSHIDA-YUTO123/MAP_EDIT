@@ -15,6 +15,7 @@
 #include"renderer.h"
 #include<stdio.h>
 #include"textureManager.h"
+#include "math.h"
 
 using namespace Const;		   // –¼‘O‹óŠÔConst‚ğg—p‚·‚é
 

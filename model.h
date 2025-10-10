@@ -35,6 +35,7 @@ public:
 	void DrawMultTexture(void);
 	void DrawShadow(void);
 	void SetTextureMT(const char* pTextureName);
+	bool CollisionMouse(void);
 
 	D3DXVECTOR3 GetPosition(void) const { return m_pos; }
 	D3DXVECTOR3 GetRotaition(void) const { return m_rot; }
@@ -56,6 +57,7 @@ public:
 	void Copy(CModel* pModel); 
 	int GetParentID(void) const { return m_nParentIdx; }
 private:
+
 	D3DXVECTOR3 m_Size;			// ‘å‚«‚³
 	D3DXVECTOR3 m_offpos;			// Šî€‚ÌˆÊ’u
 	D3DXVECTOR3 m_offrot;			// Šî€‚ÌŒü‚«
