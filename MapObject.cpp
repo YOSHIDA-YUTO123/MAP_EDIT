@@ -18,6 +18,7 @@
 #include "input.h"
 #include "MapObjectManager.h"
 #include "camera.h"
+#include "meshfield.h"
 
 //===================================================
 // コンストラクタ
@@ -93,6 +94,19 @@ void CMapObject::Uninit(void)
 //===================================================
 void CMapObject::Update(void)
 {
+	// メッシュフィールドの取得
+	CMeshField* pMeshField = CManager::GetMeshField();
+
+	// 取得できなかったら処理しない
+	if (pMeshField == nullptr) return;
+
+	float fHeight = 0.0f;
+
+	// フィールドの当たり判定
+	if (pMeshField->Collision(m_pos, &fHeight))
+	{
+		m_pos.y = fHeight;
+	}
 }
 
 //===================================================

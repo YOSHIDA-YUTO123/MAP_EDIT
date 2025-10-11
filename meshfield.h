@@ -74,6 +74,7 @@ private:
 	D3DXVECTOR2 m_Size;						// 大きさ
 	D3DXVECTOR3 m_Nor;						// 法線
 	D3DXMATRIX m_mtxWorld;					// ワールドマトリックス
+	D3DXCOLOR m_col[MAX_VERTEX];			// 色の保持
 	float m_fSaveHeight[MAX_VERTEX];		// 高さの保持
 	int m_nSegH;							// 横の分割数
 	int m_nSegV;							// 縦の分割数

@@ -43,6 +43,11 @@ namespace
 //================================================
 CMeshField::CMeshField(int nPriority) : CObject(nPriority)
 {
+	for (auto& col : m_col)
+	{
+		col = Const::WHITE;
+	}
+
 	ZeroMemory(&m_fSaveHeight, sizeof(m_fSaveHeight));
 	D3DXMatrixIdentity(&m_mtxWorld);
 	m_pIdxBuffer = nullptr;
@@ -167,7 +172,7 @@ HRESULT CMeshField::Init(void)
 			pVtx[nCntVtx].nor = D3DXVECTOR3(0.0f, 1.0f, 0.0f);
 
 			//頂点カラーの設定
-			pVtx[nCntVtx].col = WHITE;
+			pVtx[nCntVtx].col = m_col[nCntVtx];
 
 			//テクスチャ座標の設定
 			pVtx[nCntVtx].tex = D3DXVECTOR2((fTexPosX * nCntX), (fTexPosY * nCntZ));
@@ -265,6 +270,8 @@ void CMeshField::Update(void)
 			posWk.z = m_Size.y - ((m_Size.y / m_nSegV) * nCntZ) - (m_Size.y * 0.5f);
 
 			pVtx[nCntVtx].pos = posWk;
+
+			m_col[nCntVtx] = pVtx[nCntVtx].col;
 
 			// 高さを保持
 			m_fSaveHeight[nCntVtx] = posWk.y;
@@ -932,30 +939,39 @@ void CMeshField::Save(void)
 	// ファイルが開けたら
 	if (file.is_open())
 	{
-		VERTEX_3D* pVtx = NULL;
-
 		file << std::fixed << std::showpoint << std::setprecision(2);
 		file << "SEGMENT_H = " << m_nSegH << "\n";
 		file << "SEGMENT_V = " << m_nSegV << "\n";
 		file << "SIZE = " << m_Size.x << " " << m_Size.y << "\n\n";
-		file << "VERTEX_SET" << "\n";
-
-		// 頂点バッファをロック
-		m_pVtxBuffer->Lock(0, 0, (void**)&pVtx, 0);
+		file << "VERTEX_POS" << "\n";
 
 		for (int nCntZ = 0; nCntZ <= m_nSegV; nCntZ++)
 		{
 			for (int nCntX = 0; nCntX <= m_nSegH; nCntX++)
 			{
-				file << std::fixed << std::showpoint << std::setprecision(6) << pVtx[nCntVtx].pos.y << "\n";
+				file << std::fixed << std::showpoint << std::setprecision(6) << m_fSaveHeight[nCntVtx] << "\n";
 
 				nCntVtx++;
 			}
 		}
-		file << "END_VERTEX_SET" << "\n";
+		nCntVtx = 0;
 
-		// 頂点バッファをアンロック
-		m_pVtxBuffer->Unlock();
+		file << "END_VERTEX_POS" << "\n\n";
+
+		file << "VERTEX_COLOR" << "\n";
+
+		for (int nCntZ = 0; nCntZ <= m_nSegV; nCntZ++)
+		{
+			for (int nCntX = 0; nCntX <= m_nSegH; nCntX++)
+			{
+				file << std::fixed << std::showpoint << std::setprecision(1)
+				 << m_col[nCntVtx].r << " " << m_col[nCntVtx].g << " " << m_col[nCntVtx].b << " " << m_col[nCntVtx].a << "\n";
+
+				nCntVtx++;
+			}
+		}
+
+		file << "END_VERTEX_COLOR" << "\n";
 
 		file.clear();
 		file.close();
@@ -1010,22 +1026,42 @@ void CMeshField::Load(void)
 
 		int nCntVtx = 0;
 
-		if (line.find("VERTEX_SET") != std::string::npos)
+		if (line.find("VERTEX_POS") != std::string::npos)
+		{
+			while (file >> line)
+			{
+				if (line.find("END_VERTEX_POS") != std::string::npos)
+				{
+					break;
+				}
+
+				std::istringstream input(line);
+
+				input >> m_fSaveHeight[nCntVtx];
+				nCntVtx++;
+			}
+		}
+		nCntVtx = 0;
+
+		if (line.find("VERTEX_COLOR") != std::string::npos)
 		{
 			while (std::getline(file, line))
 			{
-				if (line.find("END_VERTEX_SET") != std::string::npos) break;
+				if (line.find("END_VERTEX_COLOR") != std::string::npos) break;
 
-				file >> m_fSaveHeight[nCntVtx];
+				file >> m_col[nCntVtx].r;
+				file >> m_col[nCntVtx].g;
+				file >> m_col[nCntVtx].b;
+				file >> m_col[nCntVtx].a;
+
 				nCntVtx++;
 			}
 		}
 	}
 
-		SetSegment();
+	SetSegment();
 
-		file.clear();
-		file.close();
-
+	file.clear();
+	file.close();
 }
 
