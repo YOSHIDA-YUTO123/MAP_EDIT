@@ -180,6 +180,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="manager.cpp" />
     <ClCompile Include="MapObject.cpp" />
+    <ClCompile Include="MapObjectList.cpp" />
     <ClCompile Include="MapObjectManager.cpp" />
     <ClCompile Include="math.cpp" />
     <ClCompile Include="meshfield.cpp" />
@@ -204,6 +205,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="player.cpp" />
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="sound.cpp" />
     <ClCompile Include="statebase.cpp" />
@@ -244,6 +246,7 @@
     <ClInclude Include="main.h" />
     <ClInclude Include="manager.h" />
     <ClInclude Include="MapObject.h" />
+    <ClInclude Include="MapObjectList.h" />
     <ClInclude Include="MapObjectManager.h" />
     <ClInclude Include="math.h" />
     <ClInclude Include="meshfield.h" />
@@ -264,6 +267,7 @@
     <ClInclude Include="Orbit.h" />
     <ClInclude Include="pause.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="player.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="sound.h" />
     <ClInclude Include="statebase.h" />

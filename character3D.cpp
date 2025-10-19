@@ -27,6 +27,7 @@ using namespace std;	// 名前空間stdを使用
 //===================================================
 CCharacter3D::CCharacter3D() : CObject(4)
 {
+	m_bShow = true;
 	m_Size = VEC3_NULL;
 	m_nNumModel = NULL;
 	m_pMotion = nullptr;
@@ -44,6 +45,7 @@ CCharacter3D::CCharacter3D() : CObject(4)
 //===================================================
 CCharacter3D::CCharacter3D(const TYPE type) : CObject(4)
 {
+	m_bShow = true;
 	m_type = type;
 	m_Size = VEC3_NULL;
 	m_nNumModel = NULL;
@@ -55,6 +57,50 @@ CCharacter3D::CCharacter3D(const TYPE type) : CObject(4)
 	m_state = STATE::STATE_NORMAL;
 	m_fSpeed = NULL;
 	m_nHitStopTime = NULL;
+}
+
+//===================================================
+// コピーコンストラクタ
+//===================================================
+CCharacter3D::CCharacter3D(const CCharacter3D& other)
+{
+	if (other.m_pMotion != nullptr)
+	{
+		m_pMotion = std::make_unique<CMotion>(*other.m_pMotion);
+	}
+	else
+	{
+		m_pMotion = nullptr;
+	}
+
+	// モデルの要素のクリア
+	m_apModel.clear();
+
+	// モデルの配列の確保
+	m_apModel.reserve(other.m_apModel.size());
+
+	for (auto* pModel : other.m_apModel)
+	{
+		if (pModel != nullptr)
+		{
+			m_apModel.push_back(new CModel(*pModel));
+		}
+		else
+		{
+			m_apModel.push_back(nullptr);
+		}
+	}
+
+	m_Size = other.m_Size;
+	m_nNumModel = other.m_nNumModel;
+	m_pos = VEC3_NULL;
+	m_rot = VEC3_NULL;
+	memset(m_mtxWorld, NULL, sizeof(m_mtxWorld));
+	m_nLife = other.m_nLife;
+	m_state = STATE::STATE_NORMAL;
+	m_fSpeed = other.m_fSpeed;
+	m_nHitStopTime = NULL;
+	m_bShow = true;
 }
 
 //===================================================
@@ -106,6 +152,9 @@ void CCharacter3D::Uninit(void)
 //===================================================
 void CCharacter3D::Update(void)
 {
+	// 種類が無いなら処理しない
+	if (m_bShow == false) return;
+
 	// 状態の遷移
 	switch (m_state)
 	{
@@ -149,6 +198,9 @@ void CCharacter3D::Update(void)
 //===================================================
 void CCharacter3D::Draw(void)
 {
+	// 種類が無いなら処理しない
+	if (m_bShow == false) return;
+
 	// デバイスの取得
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
@@ -178,6 +230,16 @@ void CCharacter3D::Draw(void)
 			m_apModel[nCnt]->Draw();
 		}
 	}
+}
+
+//===================================================
+// クローンの生成処理
+//===================================================
+CCharacter3D* CCharacter3D::Clone(void) const
+{
+	auto clone = new CCharacter3D(*this);
+
+	return clone;
 }
 
 //===================================================
@@ -263,33 +325,8 @@ CMotion* CCharacter3D::LoadMotion(const char* pFileName,const int nNumMotion)
 	// 文字列を合成
 	string += pFileName;
 
-	// キャラクターのマネージャーの取得
-	auto pCharacterManager = CCharacterManager::GetInstance();
-
-	if (pCharacterManager == nullptr) return nullptr;
-
-	// 自分の種類の取得
-	TYPE type = GetType();
-
 	// モーションのロード処理
 	m_pMotion = CMotion::Load(string.c_str(), m_apModel, &m_nNumModel, nNumMotion, CMotion::LOAD_TEXT);
-
-	// モーションの設定
-	pCharacterManager->SetMotion(m_pMotion.get(), type);
-
-	int nCnt = 0;
-
-	// モデルの要素分調べる
-	for (auto itr = m_apModel.begin(); itr != m_apModel.end(); ++itr)
-	{
-		// nullなら処理しない
-		if ((*itr) == nullptr) continue;
-
-		// モーションの設定
-		pCharacterManager->SetModel((*itr), type, m_nNumModel,nCnt);
-
-		nCnt++;
-	}
 
 	return m_pMotion.get();
 }
@@ -331,19 +368,6 @@ D3DXVECTOR3 CCharacter3D::GetModelSize(const int nIdx)
 }
 
 //===================================================
-// 親のマトリックスの取得
-//===================================================
-D3DXMATRIX CCharacter3D::GetParent(const int nIdx) const
-{
-	D3DXMATRIX OutMtx; // 親のマトリックス
-
-	// 親のマトリックスの取得
-	OutMtx = m_apModel[nIdx]->GetMatrixWorld();
-
-	return OutMtx;
-}
-
-//===================================================
 // キャラクターの設定処理
 //===================================================
 void CCharacter3D::SetCharacter(const int nLife, const float fSpeed, const D3DXVECTOR3 Size)
@@ -364,48 +388,6 @@ void CCharacter3D::SetModelMT(const char* pTextureName)
 		// テクスチャの設定
 		(*itr)->SetTextureMT(pTextureName);
 	}
-}
-
-//===================================================
-// 情報のコピー
-//===================================================
-void CCharacter3D::Copy(CCharacter3D* pCharacter)
-{
-	pCharacter->m_nNumModel = m_nNumModel;
-
-	// モデルの要素分を調べる
-	for (int nCnt = 0;nCnt < m_nNumModel;nCnt++)
-	{
-		// nullだったら処理しない
-		if (m_apModel[nCnt] == nullptr) continue;
-
-		// モデルの名前の取得
-		const char* pModelName = m_apModel[nCnt]->GetModelName();
-
-		// モデルの生成
-		auto pModel = CModel::Create(pModelName);
-
-		// 親のインデックスの取得
-		int nParentIdx = m_apModel[nCnt]->GetParentID();
-
-		// 情報のコピー
-		m_apModel[nCnt]->Copy(pModel);
-
-		if (nParentIdx != -1)
-		{
-			// 親のモデルの設定
-			pModel->SetParent(pCharacter->m_apModel[nParentIdx], nParentIdx);
-		}
-		else
-		{
-			// 親のモデルの設定
-			pModel->SetParent(nullptr, nParentIdx);
-		}
-		// モデルの読み込み
-		pCharacter->m_apModel.push_back(pModel);
-	}
-
-	m_pMotion->GetInfo(pCharacter->m_pMotion.get());
 }
 
 //===================================================
@@ -466,50 +448,6 @@ void CCharacter3D::UpdateMotion(void)
 	{
 		// モーションの更新処理
 		m_pMotion->Update(&m_apModel[0], m_nNumModel);
-	}
-}
-
-//===================================================
-// キャラクターの設定
-//===================================================
-void CCharacter3D::SetCharacter(void)
-{
-	// モーションの生成
-	m_pMotion = make_unique<CMotion>();
-
-	// キャラクターのマネージャーの取得
-	auto pCharacterManager = CCharacterManager::GetInstance();
-
-	if (pCharacterManager == nullptr) return;
-
-	// モーションの取得
-	pCharacterManager->GetMotion(m_pMotion.get(), m_type);
-
-	// モデルのサイズの取得
-	m_nNumModel = pCharacterManager->GetModelSize(m_type);
-
-	// モデルのサイズの確保
-	m_apModel.resize(m_nNumModel);
-
-	// モデルの総数分調べる
-	for (int nCnt = 0;nCnt < m_nNumModel;nCnt++)
-	{
-		// 親のインデックス
-		int nParentIdx = -1;
-
-		// モデルの取得
-		pCharacterManager->GetModel(&m_apModel[nCnt],m_type,nCnt,&nParentIdx);
-
-		if (nParentIdx != -1)
-		{
-			// 親のモデルの設定
-			m_apModel[nCnt]->SetParent(m_apModel[nParentIdx], nParentIdx);
-		}
-		else
-		{
-			// 親のモデルの設定
-			m_apModel[nCnt]->SetParent(nullptr, nParentIdx);
-		}
 	}
 }
 

@@ -20,6 +20,7 @@
 #include "camera.h"
 #include "meshfield.h"
 #include "transform.h"
+#include "MapObjectList.h"
 
 //***************************************************
 // ’è”éŒ¾

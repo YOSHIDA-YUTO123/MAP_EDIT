@@ -11,6 +11,7 @@
 #include "CharacterManager.h"
 #include "character3D.h"
 #include "motion.h"
+#include "player.h"
 
 using namespace std; // –¼‘O‹óŠÔstd‚Ìg—p
 
@@ -24,6 +25,10 @@ unique_ptr<CCharacterManager> CCharacterManager::m_pInstance = nullptr; // ©•ª‚
 //===================================================
 CCharacterManager::CCharacterManager()
 {
+	for (auto& list : m_pCharacter)
+	{
+		list = nullptr;
+	}
 }
 
 //===================================================
@@ -42,83 +47,130 @@ void CCharacterManager::Create(void)
 	{
 		// ©•ª‚Ì¶¬
 		m_pInstance.reset(new CCharacterManager);
+		m_pInstance->Init();
 	}
 }
 
 //===================================================
-// ƒ‚[ƒVƒ‡ƒ“‚Ìî•ñ‚Ìİ’è
+// ƒLƒƒƒ‰ƒNƒ^[‚Ìİ’è
 //===================================================
-void CCharacterManager::SetMotion(CMotion* pMotion, const CCharacter3D::TYPE type)
+void CCharacterManager::SetCharacter(CCharacter3D* pCaracther)
 {
-	// ƒ‚[ƒVƒ‡ƒ“‚Ìî•ñ‚Ìİ’è
-	pMotion->GetInfo(&m_aConfig[type].Motion);
-	m_aConfig[type].type = type;
-}
+	// í—Ş‚Ìæ“¾
+	auto Type = pCaracther->GetType();
 
-//===================================================
-// ƒ‚ƒfƒ‹‚Ìİ’è
-//===================================================
-void CCharacterManager::SetModel(CModel* pModel, const CCharacter3D::TYPE type, const int nNumModel,const int nIdx)
-{
-	CModel modelWk = {};
-
-	// ƒ‚ƒfƒ‹‚Ìî•ñ‚ÌƒRƒs[
-	pModel->Copy(&modelWk);
-
-	// ƒTƒCƒY‚ÌŠm•Û
-	m_aConfig[type].aModelList.resize(nNumModel);
-
-	// eƒ‚ƒfƒ‹‚ÌID
-	int nParentIdx = pModel->GetParentID();
-
-	if (nParentIdx != -1)
+	if (m_pCharacter[Type] == nullptr)
 	{
-		// eƒ‚ƒfƒ‹‚Ìİ’è
-		modelWk.SetParent(&m_aConfig[type].aModelList[nParentIdx], nParentIdx);
+		// ”ñ•\¦
+		pCaracther->SetOffShow();
+		m_pCharacter[Type] = pCaracther;
 	}
-	else
+}
+
+//===================================================
+// ƒLƒƒƒ‰ƒNƒ^[‚Ì¶¬
+//===================================================
+CCharacter3D* CCharacterManager::CreateCharacter(CCharacter3D::TYPE type)
+{
+	CCharacter3D* templateChar = m_pCharacter[type];
+
+	if (m_pCharacter[type] != nullptr)
 	{
-		// eƒ‚ƒfƒ‹‚Ìİ’è
-		modelWk.SetParent(nullptr, nParentIdx);
+		return templateChar->Clone();
 	}
 
-	// ƒ‚ƒfƒ‹‚Ì–¼‘O‚Ìæ“¾
-	const char* pModelName = pModel->GetModelName();
-
-	// ƒ‚ƒfƒ‹‚Ì–¼‘O‚Ìæ“¾
-	modelWk.SetModelName(pModelName);
-
-	// î•ñ‚Ìİ’è
-	m_aConfig[type].aModelList[nIdx] = modelWk;
-
-	m_aConfig[type].type = type;
+	return nullptr;
 }
 
 //===================================================
-// ƒ‚[ƒVƒ‡ƒ“‚ÌƒŠƒXƒg‚Ìİ’è
+// ‰Šú‰»ˆ—
 //===================================================
-void CCharacterManager::GetMotion(CMotion* pMotion, const CCharacter3D::TYPE type)
+void CCharacterManager::Init(void)
 {
-	// î•ñ‚Ìæ“¾
-	m_aConfig[type].Motion.GetInfo(pMotion);
+	auto templateChar = new CPlayer;
+
+	templateChar->LoadMotion("motion.txt", 5);
+
+	SetCharacter(templateChar);
+
+	CCharacter3D* p = CreateCharacter(CCharacter3D::TYPE_PLAYER);
 }
 
-//===================================================
-// ƒ‚ƒfƒ‹‚Ìæ“¾
-//===================================================
-void CCharacterManager::GetModel(CModel** pModel, const CCharacter3D::TYPE type, const int nIdx,int *pParentIndx)
-{
-	// ƒ‚ƒfƒ‹‚Ì–¼‘O‚Ìæ“¾
-	const char* pModelName = m_aConfig[type].aModelList[nIdx].GetModelName();
 
-	// ƒ‚ƒfƒ‹‚Ì¶¬
-	(*pModel) = CModel::Create(pModelName);
-
-	// ƒ‚ƒfƒ‹‚Ìî•ñ‚ÌƒRƒs[
-	m_aConfig[type].aModelList[nIdx].Copy((*pModel));
-
-	// e‚ÌƒCƒ“ƒfƒbƒNƒX‚Ìæ“¾
-	int nParentIdx = m_aConfig[type].aModelList[nIdx].GetParentID();
-
-	*pParentIndx = nParentIdx;
-}
+////===================================================
+//// ƒ‚[ƒVƒ‡ƒ“‚Ìî•ñ‚Ìİ’è
+////===================================================
+//void CCharacterManager::SetMotion(CMotion* pMotion, const CCharacter3D::TYPE type)
+//{
+//	// ƒ‚[ƒVƒ‡ƒ“‚Ìî•ñ‚Ìİ’è
+//	pMotion->GetInfo(&m_aConfig[type].Motion);
+//	m_aConfig[type].type = type;
+//}
+//
+////===================================================
+//// ƒ‚ƒfƒ‹‚Ìİ’è
+////===================================================
+//void CCharacterManager::SetModel(CModel* pModel, const CCharacter3D::TYPE type, const int nNumModel,const int nIdx)
+//{
+//	CModel modelWk = {};
+//
+//	// ƒ‚ƒfƒ‹‚Ìî•ñ‚ÌƒRƒs[
+//	pModel->Copy(&modelWk);
+//
+//	// ƒTƒCƒY‚ÌŠm•Û
+//	m_aConfig[type].aModelList.resize(nNumModel);
+//
+//	// eƒ‚ƒfƒ‹‚ÌID
+//	int nParentIdx = pModel->GetParentID();
+//
+//	if (nParentIdx != -1)
+//	{
+//		// eƒ‚ƒfƒ‹‚Ìİ’è
+//		modelWk.SetParent(&m_aConfig[type].aModelList[nParentIdx], nParentIdx);
+//	}
+//	else
+//	{
+//		// eƒ‚ƒfƒ‹‚Ìİ’è
+//		modelWk.SetParent(nullptr, nParentIdx);
+//	}
+//
+//	// ƒ‚ƒfƒ‹‚Ì–¼‘O‚Ìæ“¾
+//	const char* pModelName = pModel->GetModelName();
+//
+//	// ƒ‚ƒfƒ‹‚Ì–¼‘O‚Ìæ“¾
+//	modelWk.SetModelName(pModelName);
+//
+//	// î•ñ‚Ìİ’è
+//	m_aConfig[type].aModelList[nIdx] = modelWk;
+//
+//	m_aConfig[type].type = type;
+//}
+//
+////===================================================
+//// ƒ‚[ƒVƒ‡ƒ“‚ÌƒŠƒXƒg‚Ìİ’è
+////===================================================
+//void CCharacterManager::GetMotion(CMotion* pMotion, const CCharacter3D::TYPE type)
+//{
+//	// î•ñ‚Ìæ“¾
+//	m_aConfig[type].Motion.GetInfo(pMotion);
+//}
+//
+////===================================================
+//// ƒ‚ƒfƒ‹‚Ìæ“¾
+////===================================================
+//void CCharacterManager::GetModel(CModel** pModel, const CCharacter3D::TYPE type, const int nIdx,int *pParentIndx)
+//{
+//	// ƒ‚ƒfƒ‹‚Ì–¼‘O‚Ìæ“¾
+//	const char* pModelName = m_aConfig[type].aModelList[nIdx].GetModelName();
+//
+//	// ƒ‚ƒfƒ‹‚Ì¶¬
+//	(*pModel) = CModel::Create(pModelName);
+//
+//	// ƒ‚ƒfƒ‹‚Ìî•ñ‚ÌƒRƒs[
+//	m_aConfig[type].aModelList[nIdx].Copy((*pModel));
+//
+//	// e‚ÌƒCƒ“ƒfƒbƒNƒX‚Ìæ“¾
+//	int nParentIdx = m_aConfig[type].aModelList[nIdx].GetParentID();
+//
+//	*pParentIndx = nParentIdx;
+//}

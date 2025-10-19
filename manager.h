@@ -33,6 +33,7 @@ class CModelManager;
 class CCamera;
 class CDebugLog;
 class CMeshField;
+class CMapObjectList;
 
 //***************************************************
 // マネージャークラスの定義
@@ -62,7 +63,7 @@ public:
 	static CDebugLog* GetDebugLog(void) { return m_pDebugLog; }
 	static CTextureMTManager* GetTextureMT(void) { return m_pTexutreMTManager; }
 	static CMeshField* GetMeshField(void) { return m_pMeshField; }
-
+	static CMapObjectList* GetMapObjectList(void) { return m_pMapObjectList.get(); }
 private:
 	static CRenderer* m_pRenderer;					// レンダラーのポインタ
 	static CInputKeyboard* m_pInputKeyboard;		// キーボードのポインタ
@@ -76,6 +77,7 @@ private:
 	static CDebugLog* m_pDebugLog;					// デバッグログのクラスへのポインタ
 	static CMeshField* m_pMeshField;				// メッシュフィールドクラスへのポインタ
 	static CTextureMTManager* m_pTexutreMTManager;  // テクスチャMTのマネージャー
+	static std::unique_ptr<CMapObjectList> m_pMapObjectList; // マップのオブジェクトのリスト
 	static int m_nFrameCounter;						// フレームカウンター
 	static bool m_bShowDebug;						// デバッグ表示をするかしないか
 	int m_fps;										// fps格納用変数

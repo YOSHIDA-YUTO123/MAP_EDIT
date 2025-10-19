@@ -1,34 +1,43 @@
 {
     "MODEL_INFO": [
         {
-            "file_name": "data/MODEL/000_waist.x"
+            "file_name": "data/MODEL/AKRmodel/00_body.x"
         },
         {
-            "file_name": "data/MODEL/001_chest.x"
+            "file_name": "data/MODEL/AKRmodel/01_head.x"
         },
         {
-            "file_name": "data/MODEL/002_head.x"
+            "file_name": "data/MODEL/AKRmodel/02_armR.x"
         },
         {
-            "file_name": "data/MODEL/003_armUR.x"
+            "file_name": "data/MODEL/AKRmodel/03_handR.x"
         },
         {
-            "file_name": "data/MODEL/3dtest_zako.x"
+            "file_name": "data/MODEL/AKRmodel/04_armL.x"
         },
         {
-            "file_name": "data/MODEL/004_armFR.x"
+            "file_name": "data/MODEL/AKRmodel/05_handL.x"
         },
         {
-            "file_name": "data/MODEL/005_handR.x"
+            "file_name": "data/MODEL/AKRmodel/06_legR.x"
         },
         {
-            "file_name": "data/MODEL/006_armUL.x"
+            "file_name": "data/MODEL/AKRmodel/07_footR.x"
         },
         {
-            "file_name": "data/MODEL/007_armFL.x"
+            "file_name": "data/MODEL/AKRmodel/08_legL.x"
         },
         {
-            "file_name": "data/MODEL/test000.x"
+            "file_name": "data/MODEL/AKRmodel/09_footL.x"
+        },
+        {
+            "file_name": "data/MODEL/MapObjectFile/00_body.x"
+        },
+        {
+            "file_name": "data/MODEL/MapObjectFile/01_head.x"
+        },
+        {
+            "file_name": "data/MODEL/MapObjectFile/02_armR.x"
         }
     ]
 }

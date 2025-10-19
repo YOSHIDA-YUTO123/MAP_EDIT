@@ -31,6 +31,7 @@
 #include "DebugLog.h"
 #include "TextureMTManager.h"
 #include "edit.h"
+#include "MapObjectList.h"
 
 using namespace Const;			// 名前空間Constを使用する
 using namespace std;			// 名前空間stdを使用する
@@ -52,6 +53,7 @@ CModelManager* CManager::m_pModel = nullptr;			// モデルのクラスへのポインタ
 CDebugLog* CManager::m_pDebugLog = nullptr;				// デバッグログのクラスへのポインタ
 CTextureMTManager* CManager::m_pTexutreMTManager = nullptr; // テクスチャMTのクラスへのポインタ
 CMeshField* CManager::m_pMeshField = nullptr;				// メッシュフィールドへのポインタ
+std::unique_ptr<CMapObjectList> CManager::m_pMapObjectList = nullptr; // マップのオブジェクトのリスト
 
 //===================================================
 // コンストラクタ
@@ -105,9 +107,6 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 	// マウスの初期化処理
 	if (FAILED(m_pInputMouse->Init(hWnd))) return E_FAIL;
 
-	// キャラクターマネージャーの生成
-	CCharacterManager::Create();
-
 	// テクスチャの生成
 	m_pTexture = new CTextureManager;
 
@@ -120,6 +119,10 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 
 	m_pTexutreMTManager = new CTextureMTManager;
 	
+	// 生成
+	m_pMapObjectList.reset(CMapObjectList::Create());
+	m_pMapObjectList->Register();
+
 	// カメラの生成
 	m_pCamera = new CCamera;
 	m_pCamera->Init();
@@ -140,6 +143,9 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 	m_pMeshField = CMeshField::Create(VEC3_NULL, 1, 1, D3DXVECTOR2(2000.0f, 2000.0f));
 
 	CMeshDome::Create(VEC3_NULL, 8, 8, 10000.0f, 5000.0f);
+
+	// キャラクターマネージャーの生成
+	CCharacterManager::Create();
 
 	// 結果を返す
 	return S_OK;

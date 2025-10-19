@@ -17,6 +17,7 @@
 #include "modelManager.h"
 #include "textureManager.h"
 #include "TextureMTManager.h"
+#include "MapObjectList.h"
 
 //===================================================
 // 描画の設定処理
@@ -71,18 +72,18 @@ void CIconModel::Update(void)
 //===================================================
 void CIconModel::Draw(void)
 {
-	// マップオブジェクトのマネージャーの生成
-	CModelManager* pModelManager = CManager::GetModel();
+	// マップオブジェクトのリストの取得
+	CMapObjectList* pMapObjectList = CManager::GetMapObjectList();
 
 	// 取得できなかったら処理しない
-	if (pModelManager == nullptr) return;
+	if (pMapObjectList == nullptr) return;
 
 	LPDIRECT3DSURFACE9 pRenderDef, pZBuffer;
 	D3DVIEWPORT9 viepowtDef;
 	D3DXMATRIX mtxViewDef, mtxProjectionDef;
 	
 	// マップオブジェクトのリストを調べる
-	for (auto& modelInfo : pModelManager->GetList())
+	for (auto& modelInfo : pMapObjectList->GetList())
 	{
 		// デバイスの取得
 		LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();

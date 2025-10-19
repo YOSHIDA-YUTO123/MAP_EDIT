@@ -53,9 +53,6 @@ CModel::~CModel()
 //===================================================
 HRESULT CModel::Init(const char* pModelName)
 {
-	// モデルクラスの取得
-	CModelManager* pModel = CManager::GetModel();
-
 	// モデルマネージャークラスの取得
 	CModelManager* pModelManager = CManager::GetModel();
 
@@ -68,7 +65,7 @@ HRESULT CModel::Init(const char* pModelName)
 	}
 
 	// モデルの情報の取得
-	CModelManager::ModelInfo modelInfo = pModel->GetModelInfo(m_nModelIdx);
+	CModelManager::ModelInfo modelInfo = pModelManager->GetModelInfo(m_nModelIdx);
 
 	// モデルの名前の設定
 	m_aModelName = pModelName;

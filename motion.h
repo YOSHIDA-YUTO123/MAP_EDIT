@@ -82,6 +82,7 @@ public:
 	};
 
 	CMotion();
+	CMotion(const CMotion& other);
 	~CMotion();
 
 	static std::unique_ptr<CMotion> Load(const char* pLoadFileName, std::vector<CModel*> &pModel, int* pOutModel, const int nNumMotion, LOAD type);

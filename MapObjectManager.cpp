@@ -27,6 +27,7 @@
 #include "object3D.h"
 #include "TextureMTManager.h"
 #include "transform.h"
+#include"MapObjectList.h"
 
 // jsonの使用
 using json = nlohmann::json;
@@ -101,9 +102,6 @@ HRESULT CMapObjectManager::Init(void)
 
 	// アイコンの生成
 	CIconModel::Create();
-
-	//// マップオブジェクトの生成
-	//m_pSelect = CMapObjectManager::Create({ -500.0f,0.0f,0.0f }, modelInfo.filepath);
 
 	return S_OK;
 }
@@ -247,17 +245,17 @@ CMapObjectManager::CMapObjectManager()
 //===================================================
 void CMapObjectManager::GetModelPath(void)
 {
-	// モデルのマネージャーの取得
-	CModelManager* pModelManager = CManager::GetModel();
+	// マップのオブジェクトのリストの取得
+	CMapObjectList* pMapObjectList = CManager::GetMapObjectList();
 
 	// 取得できなかったら処理しない
-	if (pModelManager == nullptr) return;
+	if (pMapObjectList == nullptr) return;
 
 	// モデルの総数分調べる
-	for (auto itr = pModelManager->GetList().begin(); itr != pModelManager->GetList().end(); itr++)
+	for (auto &list : pMapObjectList->GetList())
 	{
 		// ファイルパスの取得
-		std::string modelpath = itr->filepath;
+		std::string modelpath = list.filepath;
 
 		// パスのリストを調べるp
 		for (auto pathList = m_aModelPath.begin(); pathList != m_aModelPath.end(); pathList++)
@@ -409,6 +407,12 @@ HRESULT CMapObjectManager::Register(void)
 	// 取得できなかったら処理しない
 	if (pModelManager == nullptr) return E_FAIL;
 
+	// マップのオブジェクトのリストの取得
+	CMapObjectList* pMapObjectList = CManager::GetMapObjectList();
+
+	// 取得できなかったら処理しない
+	if (pMapObjectList == nullptr) return E_FAIL;
+
 	// 文字列
 	static char pModelName[MAX_WORD] = {};
 
@@ -417,11 +421,11 @@ HRESULT CMapObjectManager::Register(void)
 	if (ImGui::InputText(u8"モデルの登録", pModelName, sizeof(pModelName), ImGuiInputTextFlags_EnterReturnsTrue))
 	{
 		// 省略用パス
-		std::string modelPath = "data/MODEL/";
+		std::string modelPath = "data/MODEL/MapObjectFile/";
 		std::string findPath = pModelName;
 
 		// 含まれていたら
-		if (findPath.find("data/MODEL/") != std::string::npos)
+		if (findPath.find("data/MODEL/MapObjectFile/") != std::string::npos)
 		{
 			// パスの設定
 			modelPath = pModelName;
@@ -433,18 +437,23 @@ HRESULT CMapObjectManager::Register(void)
 		}
 
 		// パスのリストを調べる
-		for (auto pathList = m_aModelPath.begin(); pathList != m_aModelPath.end(); pathList++)
+		for (auto& pathList : m_aModelPath)
 		{
 			// すでに登録済みだったら
-			if (pathList->find(modelPath) != std::string::npos)
+			if (pathList.find(modelPath) != std::string::npos)
 			{
 				MessageBox(NULL, modelPath.c_str(), "すでに登録されています", MB_OK);
 				return E_FAIL;
 			}
 		}
 
-		pModelManager->Register(modelPath.c_str());
+		int nIdx = pModelManager->Register(modelPath.c_str());
+
+		if (nIdx == -1) return E_FAIL;
+
 		m_aModelPath.push_back(modelPath);
+
+		pMapObjectList->Register();
 	}
 
 	return S_OK;
@@ -710,11 +719,11 @@ void CMapObjectManager::SetTextureIcon(CImGuiManager* pImgui)
 	// 取得できなかったら処理しない
 	if (pTexture == nullptr) return;
 
-	// モデルのマネージャーの取得
-	CModelManager* pModelManager = CManager::GetModel();
+	// マップのオブジェクトのリストの取得
+	CMapObjectList* pMapObjectList = CManager::GetMapObjectList();
 
-	// モデルマネージャーの取得
-	if (pModelManager == nullptr) return;
+	// 取得できなかったら処理しない
+	if (pMapObjectList == nullptr) return;
 
 	// テクスチャMTの取得
 	CTextureMTManager* pTextureMT = CManager::GetTextureMT();
@@ -722,7 +731,7 @@ void CMapObjectManager::SetTextureIcon(CImGuiManager* pImgui)
 	// 取得できなかったら処理しない
 	if (pTextureMT == nullptr) return;
 
-	for (auto& modelList : pModelManager->GetList())
+	for (auto& modelList : pMapObjectList->GetList())
 	{
 		// パスの登録
 		pTextureMT->GetAddress(modelList.filepath);

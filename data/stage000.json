@@ -1,11 +1,11 @@
 {
     "MODEL_INFO": [
         {
-            "file_path": "data/MODEL/003_armUR.x",
+            "file_path": "data/MODEL/MapObjectFile/02_armR.x",
             "position": {
-                "x": 85.96332550048828,
+                "x": -94.7507553100586,
                 "y": 0.0,
-                "z": -35.76744842529297
+                "z": 19.126953125
             },
             "rotation": {
                 "x": 0.0,
@@ -15,11 +15,25 @@
             "type": "static"
         },
         {
-            "file_path": "data/MODEL/002_head.x",
+            "file_path": "data/MODEL/MapObjectFile/01_head.x",
             "position": {
-                "x": -33.95838928222656,
-                "y": 3.5640268325805664,
-                "z": 66.56716918945313
+                "x": -29.6962890625,
+                "y": 0.0,
+                "z": 56.1622314453125
+            },
+            "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "type": "static"
+        },
+        {
+            "file_path": "data/MODEL/MapObjectFile/00_body.x",
+            "position": {
+                "x": 320.8428649902344,
+                "y": 0.0,
+                "z": -29.06109619140625
             },
             "rotation": {
                 "x": 0.0,

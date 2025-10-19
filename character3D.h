@@ -50,17 +50,23 @@ public:
 	typedef enum
 	{
 		TYPE_NONE = 0,
+		TYPE_PLAYER,
 		TYPE_MAX
 	}TYPE;
 
 	CCharacter3D();
 	CCharacter3D(const TYPE type);
+	CCharacter3D(const CCharacter3D& other);
+
 	virtual ~CCharacter3D();
 
 	virtual HRESULT Init(void) override;
 	virtual void Uninit(void) override;
 	virtual void Update(void) override;
 	virtual void Draw(void) override;
+	virtual CCharacter3D* Clone(void) const;
+	void SetOffShow(void) { m_bShow = false; }
+
 	void Draw(const float fAvl);
 	void DrawMT(void);
 	
@@ -79,7 +85,6 @@ public:
 	D3DXVECTOR3 GetModelPos(const int nIdx);
 	D3DXVECTOR3 GetModelRot(const int nIdx);
 	D3DXVECTOR3 GetModelSize(const int nIdx);
-	D3DXMATRIX GetParent(const int nIdx) const;
 
 	// セッター
 	void SetPosition(const D3DXVECTOR3 pos) { m_pos = pos; }
@@ -87,7 +92,6 @@ public:
 
 	void SetCharacter(const int nLife, const float fSpeed, const D3DXVECTOR3 Size);
 	void SetModelMT(const char* pTextureName);
-	void Copy(CCharacter3D* pCharacter);
 
 	bool GetAlive(void);		// 生きているか
 
@@ -97,10 +101,7 @@ public:
 	void SetHitStop(const int nTime) { m_nHitStopTime = nTime; } // ヒットストップの設定
 	void UpdateMotion(void);
 
-protected:
-	void SetCharacter(void);
 private:
-
 	std::unique_ptr<CMotion> m_pMotion;		// モーションのクラスへのポインタ
 	std::vector<CModel*> m_apModel;			// モデルクラスのポインタ
 	STATE m_state;							// 状態
@@ -114,5 +115,6 @@ private:
 	int m_nCounterState;					// 状態のカウンター
 	int m_nLife;							// 寿命
 	int m_nHitStopTime;						// ヒットストップの時間
+	bool m_bShow;							// 描画するかどうか
 };
 #endif

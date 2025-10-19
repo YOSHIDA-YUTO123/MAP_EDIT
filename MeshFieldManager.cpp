@@ -207,6 +207,7 @@ void CMeshFieldManager::SetVtx(CMeshField* pMeshField)
     // 情報の取得
     CTransform::Info info = m_pTransform->GetInfo();
 
+    // コライダーの位置の更新
     info.pos = m_BrushPos;
     info.fRadius = m_fBrushRadius;
 

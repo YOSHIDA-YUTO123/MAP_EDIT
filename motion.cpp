@@ -55,6 +55,35 @@ CMotion::CMotion()
 }
 
 //===================================================
+// コピーコンストラクタ
+//===================================================
+CMotion::CMotion(const CMotion& other)
+{
+	m_aInfo = other.m_aInfo;	// モーション情報へのポインタ
+	m_bLoopMotion = other.m_bLoopMotion;
+	m_nCount = other.m_nCount;
+	m_nextKey = other.m_nextKey;
+	m_nKey = NULL;
+	m_nNumKey = other.m_nNumKey;
+	m_nType = NULL;
+	m_nTypeBlend = NULL;
+	m_bFinish = false;
+	m_bFirst = false;
+	m_bBlend = false;
+	m_bLoopBlend = other.m_bLoopBlend;
+	m_nCounterBlend = NULL;
+	m_nCounterMotionBlend = NULL;
+	m_nNextKeyBlend = NULL;
+	m_nFrameBlend = other.m_nFrameBlend;
+	m_nKeyBlend = NULL;
+	m_nNumKeyBlend = NULL;
+	m_nAllCounter = NULL;
+	m_nAllFrame = other.m_nAllFrame;
+	m_nEndBlendMotion = other.m_nEndBlendMotion;
+	m_bSlowMag = false; // スロー倍率がかかっているかどうか
+}
+
+//===================================================
 // デストラクタ
 //===================================================
 CMotion::~CMotion()
@@ -389,7 +418,7 @@ void CMotion::UpdateBlendMotion(CModel** pModel, int nIdx)
 //===================================================
 void CMotion::Update(CModel** pModel,const int nNumModel)
 {
-	if (IsLoad() == false) return;
+	//if (IsLoad() == false) return;
 
 	for (int nCntModel = 0; nCntModel < nNumModel; nCntModel++)
 	{
@@ -457,7 +486,7 @@ void CMotion::Update(CModel** pModel,const int nNumModel)
 		m_nKey++;
 
 		// 範囲内にラップする
-		m_nKey = Wrap(m_nKey, 0, m_aInfo[m_nType].nNumkey - 1);
+		m_nKey = Wrap(m_nKey, 0, m_aInfo[m_nType].nNumkey);
 
 		// カウンターをリセット
 		m_nCount = 0;
@@ -473,7 +502,7 @@ void CMotion::Update(CModel** pModel,const int nNumModel)
 		m_nKeyBlend++;
 
 		// 範囲内にラップする
-		m_nKeyBlend = Wrap(m_nKeyBlend, 0, m_aInfo[m_nTypeBlend].nNumkey - 1);
+		m_nKeyBlend = Wrap(m_nKeyBlend, 0, m_aInfo[m_nTypeBlend].nNumkey);
 
 		m_nCounterMotionBlend = 0;
 	}
