@@ -23,6 +23,7 @@
 //************************************************
 class CMeshField;
 class CColliderSphere;
+class CTransform;
 
 //************************************************
 // メッシュフィールドクラスの定義
@@ -33,7 +34,7 @@ public:
 	static constexpr int MAX_SEGMENT_H = 150; // 横の分割数
 	static constexpr int MAX_SEGMENT_V = 150; // 縦の分割数
 
-	CMeshField(int nPriority = 2);
+	CMeshField();
 	~CMeshField();
 
 	static CMeshField* Create(const D3DXVECTOR3 pos,const int nSegH,const int nSegV,const D3DXVECTOR2 Size, const D3DXVECTOR3 rot = Const::VEC3_NULL);
@@ -67,13 +68,16 @@ public:
 private:
 	static constexpr int MAX_VERTEX = (MAX_SEGMENT_H * MAX_SEGMENT_V); // 最大の頂点数
 
+	std::unique_ptr<CTransform> m_pTransform;  // 空間情報
+	std::unique_ptr<CColliderSphere> m_pSphere; // 円のコライダー
+
 	LPDIRECT3DVERTEXBUFFER9 m_pVtxBuffer;	// 頂点バッファへのポインタ
 	LPDIRECT3DINDEXBUFFER9 m_pIdxBuffer;	// インデックスバッファへのポインタ
+	D3DXMATRIX m_mtxWorld;					// ワールドマトリックス
 	D3DXVECTOR3 m_pos;						// 位置
 	D3DXVECTOR3 m_rot;						// 向き
 	D3DXVECTOR2 m_Size;						// 大きさ
 	D3DXVECTOR3 m_Nor;						// 法線
-	D3DXMATRIX m_mtxWorld;					// ワールドマトリックス
 	D3DXCOLOR m_col[MAX_VERTEX];			// 色の保持
 	float m_fSaveHeight[MAX_VERTEX];		// 高さの保持
 	int m_nSegH;							// 横の分割数

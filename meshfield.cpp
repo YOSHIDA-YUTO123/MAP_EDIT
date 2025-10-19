@@ -23,6 +23,7 @@
 #include <string>
 #include <fstream>
 #include <iomanip>
+#include "transform.h"
 
 using namespace Const;		// 名前空間Constを使用する
 using namespace std;		// 名前空間stdを使用する
@@ -41,7 +42,7 @@ namespace
 //================================================
 // コンストラクタ
 //================================================
-CMeshField::CMeshField(int nPriority) : CObject(nPriority)
+CMeshField::CMeshField()
 {
 	for (auto& col : m_col)
 	{
@@ -50,6 +51,8 @@ CMeshField::CMeshField(int nPriority) : CObject(nPriority)
 
 	ZeroMemory(&m_fSaveHeight, sizeof(m_fSaveHeight));
 	D3DXMatrixIdentity(&m_mtxWorld);
+	m_pos = Const::VEC3_NULL;
+	m_rot = Const::VEC3_NULL;
 	m_pIdxBuffer = nullptr;
 	m_pVtxBuffer = nullptr;
 	m_nNumIdx = NULL;
@@ -58,8 +61,6 @@ CMeshField::CMeshField(int nPriority) : CObject(nPriority)
 	m_nTextureIdx = -1;
 	m_nSegV = 1;
 	m_nSegH = 1;
-	m_pos = VEC3_NULL;
-	m_rot = VEC3_NULL;
 	m_Size = VEC2_NULL;
 	m_Nor = VEC3_NULL;
 }
@@ -92,9 +93,9 @@ CMeshField* CMeshField::Create(const D3DXVECTOR3 pos, const int nSegH, const int
 	pMeshField->m_nSegV = nSegV;
 
 	pMeshField->m_pos = pos;
-	pMeshField->m_Size = Size;
 	pMeshField->m_rot = rot;
-	
+	pMeshField->m_Size = Size;
+
 	// 初期化処理
 	if (FAILED(pMeshField->Init()))
 	{
@@ -218,6 +219,10 @@ HRESULT CMeshField::Init(void)
 
 	// インデックスバッファのアンロック
 	m_pIdxBuffer->Unlock();
+
+	// 空間情報の生成
+	m_pTransform.reset(CTransform::Create());
+	m_pSphere = CColliderSphere::Create(m_pos, 10.0f, m_pTransform.get());
 
 	return S_OK;
 }
@@ -864,18 +869,26 @@ void CMeshField::SetVtxHeight(CColliderSphere* pSphere, const float AddHeightVal
 	// 頂点バッファをロック
 	m_pVtxBuffer->Lock(0, 0, (void**)&pVtx, 0);
 
+	D3DXVECTOR3 vtxPos = Const::VEC3_NULL;
+
 	for (int nCntZ = 0; nCntZ <= m_nSegV; nCntZ++)
 	{
 		for (int nCntX = 0; nCntX <= m_nSegH; nCntX++)
 		{
 			// y座標は考慮しない
-			D3DXVECTOR3 vtxPos(pVtx[nCntVtx].pos.x, 0.0f, pVtx[nCntVtx].pos.z);
+			vtxPos = { pVtx[nCntVtx].pos.x, 0.0f, pVtx[nCntVtx].pos.z };
 
-			// 頂点のコライダーの生成
-			CColliderSphere sphere = CColliderSphere::CreateCollider(vtxPos, 10.0f);
+			// 情報の取得
+			CTransform::Info info = m_pTransform->GetInfo();
+
+			// 位置の更新
+			info.pos = vtxPos;
+
+			// 情報の設定
+			m_pTransform->SetInfo(info);
 
 			// 当たっていたら
-			if (CCollisionSphere::Collision(&sphere, pSphere))
+			if (CCollisionSphere::Collision(m_pSphere.get(), pSphere))
 			{
 				// 高さの設定
 				pVtx[nCntVtx].pos.y += AddHeightValue;
@@ -894,37 +907,51 @@ void CMeshField::SetVtxHeight(CColliderSphere* pSphere, const float AddHeightVal
 //================================================
 void CMeshField::SetVtxColor(CColliderSphere* pSphere, const D3DXCOLOR col)
 {
-	// 頂点のカウント
-	int nCntVtx = 0;
+	//// 頂点のカウント
+	//int nCntVtx = 0;
 
-	VERTEX_3D* pVtx = NULL;
+	//VERTEX_3D* pVtx = NULL;
 
-	// 頂点バッファをロック
-	m_pVtxBuffer->Lock(0, 0, (void**)&pVtx, 0);
+	//// 頂点バッファをロック
+	//m_pVtxBuffer->Lock(0, 0, (void**)&pVtx, 0);
 
-	for (int nCntZ = 0; nCntZ <= m_nSegV; nCntZ++)
-	{
-		for (int nCntX = 0; nCntX <= m_nSegH; nCntX++)
-		{
-			// y座標は考慮しない
-			D3DXVECTOR3 vtxPos(pVtx[nCntVtx].pos.x, 0.0f, pVtx[nCntVtx].pos.z);
+	//D3DXVECTOR3 vtxPos = Const::VEC3_NULL;
 
-			// 頂点のコライダーの生成
-			CColliderSphere sphere = CColliderSphere::CreateCollider(vtxPos, 10.0f);
+	//for (int nCntZ = 0; nCntZ <= m_nSegV; nCntZ++)
+	//{
+	//	for (int nCntX = 0; nCntX <= m_nSegH; nCntX++)
+	//	{
+	//		// y座標は考慮しない
+	//		vtxPos = { pVtx[nCntVtx].pos.x, 0.0f, pVtx[nCntVtx].pos.z };
 
-			// 当たっていたら
-			if (CCollisionSphere::Collision(&sphere, pSphere))
-			{
-				// 高さの設定
-				pVtx[nCntVtx].col = col;
-			}
+	//		// 空間情報の取得
+	//		CTransform* pTransform = sphere.GetTransform();
 
-			nCntVtx++;
-		}
-	}
+	//		// 取得できなかったら処理しない
+	//		if (pTransform == nullptr) continue;
 
-	// 頂点バッファをアンロック
-	m_pVtxBuffer->Unlock();
+	//		// 情報の取得
+	//		CTransform::Info info = pTransform->GetInfo();
+
+	//		// 位置の更新
+	//		info.pos = vtxPos;
+
+	//		// 情報の設定
+	//		pTransform->SetInfo(info);
+
+	//		// 当たっていたら
+	//		if (CCollisionSphere::Collision(&sphere, pSphere))
+	//		{
+	//			// 高さの設定
+	//			pVtx[nCntVtx].col = col;
+	//		}
+
+	//		nCntVtx++;
+	//	}
+	//}
+
+	//// 頂点バッファをアンロック
+	//m_pVtxBuffer->Unlock();
 }
 
 //================================================

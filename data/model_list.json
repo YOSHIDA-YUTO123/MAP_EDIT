@@ -1,19 +1,34 @@
 {
     "MODEL_INFO": [
         {
-            "file_name": "data/MODEL/takkyu.x"
+            "file_name": "data/MODEL/000_waist.x"
+        },
+        {
+            "file_name": "data/MODEL/001_chest.x"
+        },
+        {
+            "file_name": "data/MODEL/002_head.x"
+        },
+        {
+            "file_name": "data/MODEL/003_armUR.x"
+        },
+        {
+            "file_name": "data/MODEL/3dtest_zako.x"
+        },
+        {
+            "file_name": "data/MODEL/004_armFR.x"
+        },
+        {
+            "file_name": "data/MODEL/005_handR.x"
+        },
+        {
+            "file_name": "data/MODEL/006_armUL.x"
+        },
+        {
+            "file_name": "data/MODEL/007_armFL.x"
         },
         {
             "file_name": "data/MODEL/test000.x"
-        },
-        {
-            "file_name": "data/MODEL/test001.x"
-        },
-        {
-            "file_name": "data/MODEL/test002.x"
-        },
-        {
-            "file_name": "data/MODEL/test003.x"
         }
     ]
 }

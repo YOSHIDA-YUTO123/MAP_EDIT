@@ -211,7 +211,7 @@ void CImGuiManager::ShowTextureIcon(const LPDIRECT3DTEXTURE9 texture, const char
 			proj);
 
 		// ƒuƒƒbƒN‚ð¶¬‚·‚é
-		CMapObjectManager::GetInstance()->Create(pos, { 0.0f,0.0f,0.0f }, m_DraggingModelType.c_str());
+		CMapObjectManager::GetInstance()->Create(pos, { 0.0f,0.0f,0.0f }, m_DraggingModelType.c_str(),"static");
 		
 		m_bDraggingModel = false;
 		m_DraggingModelType.clear();

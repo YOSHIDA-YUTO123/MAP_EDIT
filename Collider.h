@@ -15,7 +15,13 @@
 // インクルードファイル
 //************************************************
 #include"main.h"
-#include<memory>
+#include <memory>
+#include <string>
+
+//************************************************
+// 前方宣言
+//************************************************
+class CTransform;
 
 //************************************************
 // コライダークラスの定義
@@ -23,14 +29,37 @@
 class CCollider
 {
 public:
-	CCollider();
-	virtual ~CCollider();
-	void SetPosition(const D3DXVECTOR3 pos) { m_pos = pos; }
 
-	D3DXVECTOR3 GetPos(void) const { return m_pos; }
-protected:
-	D3DXVECTOR3 m_pos; // 位置
+	// コライダーの種類
+	typedef enum
+	{
+		TYPE_AABB = 0, // 矩形
+		TYPE_SPHERE,   // 球
+		TYPE_FOV,	   // 視界
+		TYPE_CAPSULE,  // カプセル
+		TYPE_MAX
+	}TYPE;
+
+	CCollider();
+	CCollider(const TYPE type);
+	virtual ~CCollider();
+
+	// データ取得
+	virtual const void* GetData(void) const { return nullptr; }
+
+	virtual void Update(void) {};
+
+	CTransform* GetTransform(void) { return m_pTransform; }
+	void SetTransform(CTransform* pTransform) { m_pTransform = pTransform; }
+	void SetTag(const char* pTag) { m_tag = pTag; }
+
+	void DeleteTransform(void);
+	TYPE GetType(void) const { return m_type; }
+	const char* GetTag(void) const { return m_tag.c_str(); }
 private:
+	CTransform* m_pTransform; // トランスフォームクラスへのポインタ
+	std::string m_tag;		  // コライダーのタグ
+	TYPE m_type;			  // コライダーの種類
 };
 
 //************************************************
@@ -40,21 +69,14 @@ class CColliderAABB : public CCollider
 {
 public:
 
-	// 当たり判定に必要なデータ(前回の位置,大きさ...)
-	struct Data
-	{
-		D3DXVECTOR3 posOld; // 前回の位置
-		D3DXVECTOR3 Size;	// 大きさ
-	};
-
 	CColliderAABB();
 	~CColliderAABB();
+	const void* GetData(void) const override { return nullptr; };
+	void Update(void) override;
+
 	static std::unique_ptr<CColliderAABB> Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 posOld, const D3DXVECTOR3 Size);
 	static CColliderAABB CreateCollider(const D3DXVECTOR3 pos, const D3DXVECTOR3 posOld, const D3DXVECTOR3 Size);
-	void UpdateData(const D3DXVECTOR3 pos, const D3DXVECTOR3 posOld);
-	Data GetData(void) { return m_Data; }
 private:
-	Data m_Data; // データ
 };
 
 //************************************************
@@ -65,12 +87,14 @@ class CColliderSphere : public CCollider
 public:
 	CColliderSphere();
 	~CColliderSphere();
-	static std::unique_ptr<CColliderSphere> Create(const D3DXVECTOR3 pos,const float fRadius);
+
+	const void* GetData(void) const override { return nullptr; };
+	void Update(void) override;
+
+	static std::unique_ptr<CColliderSphere> Create(const D3DXVECTOR3 pos,const float fRadius, CTransform* pTransform);
+	static CColliderSphere* CreateRawPtr(const D3DXVECTOR3 pos, const float fRadius, CTransform* pTransform);
 	static CColliderSphere CreateCollider(const D3DXVECTOR3 pos, const float fRadius);
-	float GetRadius(void) const { return m_fRadius; }
-	void SetRadius(const float fRadius) { m_fRadius = fRadius; }
 private:
-	float m_fRadius;	// 半径
 };
 
 //************************************************
@@ -92,8 +116,9 @@ public:
 	~CColliderFOV();
 	static std::unique_ptr<CColliderFOV> Create(const D3DXVECTOR3 pos,const float fAngle, const float fAngleLeft, const float fAngleRight,const float fLength);
 	static CColliderFOV CreateCollider(const D3DXVECTOR3 pos, const float fAngle, const float fAngleLeft, const float fAngleRight, const float fLength);
-	Data GetData(void) const { return m_Data; }
-	void UpdateData(const float fNowAngle) { m_Data.fNowAngle = fNowAngle; }
+	const void* GetData(void) const override { return &m_Data; }
+	void Update(void) override;
+
 private:
 	Data m_Data; // データ
 };
@@ -111,16 +136,19 @@ public:
 		D3DXVECTOR3 StartPos; // 始点
 		D3DXVECTOR3 EndPos;	// 終点
 		float fRadius;		// 半径
-		int nID;			// 自分の番号
 	};
 
 	CColliderCapsule();
 	~CColliderCapsule();
-	static std::unique_ptr<CColliderCapsule> Create(const D3DXVECTOR3 StartPos, const D3DXVECTOR3 EndPos, const float fRadius,const int nID);
+
+	static std::unique_ptr<CColliderCapsule> Create(const D3DXVECTOR3 StartPos, const D3DXVECTOR3 EndPos, const float fRadius);
 	static CColliderCapsule CreateCollider(const D3DXVECTOR3 StartPos, const D3DXVECTOR3 EndPos, const float fRadius);
-	Data GetData(void) const { return m_Data; }
-	void UpdateData(const Data data);
+	const void* GetData(void) const override { return &m_Data; }
+	void Update(void) override;
+
 private:
-	Data m_Data; // データ
+	Data m_Data;			  // データ
+	D3DXVECTOR3 m_LocalStart; // 始点の位置
+	D3DXVECTOR3 m_LocalEnd;	  // 終点の位置
 };
 #endif

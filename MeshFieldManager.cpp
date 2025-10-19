@@ -18,6 +18,7 @@
 #include "Collider.h"
 #include "input.h"
 #include "imguimaneger.h"
+#include "transform.h"
 
 //***************************************************
 // 静的メンバ変数宣言
@@ -57,8 +58,11 @@ HRESULT CMeshFieldManager::Init(void)
     // シリンダーの生成
     m_pMeshCylinder = CMeshCylinder::Create(Const::VEC3_NULL, 8, 1, m_fBrushRadius, 1000.0f, Const::VEC3_NULL);
 
+    // 空間情報の取得
+    m_pTransform.reset(CTransform::Create());
+
     // 生成
-    m_pBrushSphere = CColliderSphere::Create(Const::VEC3_NULL, m_fBrushRadius);
+    m_pBrushSphere = CColliderSphere::Create(Const::VEC3_NULL, m_fBrushRadius,m_pTransform.get());
 
     return S_OK;
 }
@@ -200,9 +204,13 @@ void CMeshFieldManager::SetVtx(CMeshField* pMeshField)
     // nullだったら処理しない
     if (m_pBrushSphere == nullptr) return;
 
-    // 位置の設定
-    m_pBrushSphere->SetPosition(m_BrushPos);
-    m_pBrushSphere->SetRadius(m_fBrushRadius);
+    // 情報の取得
+    CTransform::Info info = m_pTransform->GetInfo();
+
+    info.pos = m_BrushPos;
+    info.fRadius = m_fBrushRadius;
+
+    m_pTransform->SetInfo(info);
 
     // キーボードの取得
     CInputMouse* pMouse = CManager::GetInputMouse();

@@ -149,7 +149,7 @@ void CLight::SetPoint(const D3DXVECTOR3 pos, const float fRange, const D3DXCOLOR
 
 			info.aLight.Specular = Diffuse;
 			info.aLight.Attenuation0 = 0.0f;
-			info.aLight.Attenuation1 = 0.002f;
+			info.aLight.Attenuation1 = 0.004f;
 			info.aLight.Attenuation2 = 0.00f;
 			info.aLight.Range = fRange;
 

@@ -21,11 +21,7 @@
 //************************************************
 // 前方宣言
 //************************************************
-class CColliderAABB;
 class CCollider;
-class CColliderSphere;
-class CColliderFOV;
-class CColliderCapsule;
 
 //************************************************
 // 当たり判定のクラスの定義
@@ -76,7 +72,7 @@ public:
 	}FACE;
 
 	~CCollisionAABB();
-	static bool Collision(CColliderAABB* pMyBox, CColliderAABB* pTargetBox, D3DXVECTOR3* pushPos = nullptr,int *pFace = nullptr);
+	static bool Collision(CCollider* pMyBox, CCollider* pTargetBox, D3DXVECTOR3* pushPos = nullptr, int* pFace = nullptr);
 private:
 	CCollisionAABB();
 };
@@ -88,8 +84,7 @@ class CCollisionSphere : public CCollision
 {
 public:
 	~CCollisionSphere();
-
-	static bool Collision(CColliderSphere* myCollider, CColliderSphere* otherCollider);
+	static bool Collision(CCollider* myCollider, CCollider* otherCollider);
 private:
 	CCollisionSphere();
 };
@@ -102,7 +97,7 @@ class CCollisionFOV : public CCollision
 public:
 	~CCollisionFOV();
 
-	static bool Collision(const D3DXVECTOR3 otherpos, CColliderFOV* pFOV);
+	static bool Collision(const D3DXVECTOR3 otherpos, CCollider* pFOV);
 private:
 	CCollisionFOV();
 };
@@ -115,8 +110,23 @@ class CCollisionCapsule : public CCollision
 public:
 	~CCollisionCapsule();
 
-	static bool Collision(CColliderCapsule* myCapsule, CColliderCapsule* otherCapsule, D3DXVECTOR3* NearPos1 = nullptr, D3DXVECTOR3* NearPos2 = nullptr);
-	static bool CollisionSphere(CColliderCapsule* pCapsule, CColliderSphere* pSphere);
+	/**
+	* @brief カプセルvsカプセル
+	* @param 自分のカプセル
+	* @param 相手のカプセル
+	* @param 自分の最近点
+	* @param 相手の最近点
+	* @return 判定の結果
+	*/
+	static bool Collision(CCollider* myCapsule, CCollider* otherCapsule, D3DXVECTOR3* NearPos1 = nullptr, D3DXVECTOR3* NearPos2 = nullptr);
+
+	/**
+	* @brief カプセルvs円
+	* @param 自分のカプセル
+	* @param 相手の円
+	* @return 判定の結果
+	*/
+	static bool CollisionSphere(CCollider* pCapsule, CCollider* pSphere);
 private:
 	CCollisionCapsule();
 	static float ClosestPtSegmentSegment(D3DXVECTOR3 Start1, D3DXVECTOR3 End1, D3DXVECTOR3 Start2, D3DXVECTOR3 End2, float* pParam1, float* pParam2, D3DXVECTOR3* c1osestPos1, D3DXVECTOR3* c1osestPos2);

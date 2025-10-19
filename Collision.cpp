@@ -9,8 +9,9 @@
 // インクルードファイル
 //************************************************
 #include "Collision.h"
-#include "math.h"
-#include "Collider.h"
+#include"math.h"
+#include"Collider.h"
+#include "transform.h"
 
 using namespace Const; // 名前空間Constを使用
 using namespace math; // 名前空間を使用
@@ -84,31 +85,47 @@ CCollisionAABB::~CCollisionAABB()
 //================================================
 // AABB対AABBの当たり判定
 //================================================
-bool CCollisionAABB::Collision(CColliderAABB* pMyBox, CColliderAABB* pTargetBox, D3DXVECTOR3* pushPos,int* pFace)
+bool CCollisionAABB::Collision(CCollider* pMyBox, CCollider* pTargetBox, D3DXVECTOR3* pushPos,int* pFace)
 {
+	// 自分の空間情報へのポインタの取得
+	CTransform* pMyTransform = pMyBox->GetTransform();
+
+	// 相手の空間情報へのポインタの取得
+	CTransform* pOtherTransform = pTargetBox->GetTransform();
+
+	// 自分の空間情報の取得
+	CTransform::Info myInfo = {};
+	CTransform::Info otherInfo = {};
+
+	if (pMyTransform != nullptr)
+	{
+		// 情報の取得
+		myInfo = pMyTransform->GetInfo();
+	}
+
+	if (pOtherTransform != nullptr)
+	{
+		// 情報の取得
+		otherInfo = pOtherTransform->GetInfo();
+	}
+
 	// 自分の位置と大きさの取得
-	D3DXVECTOR3 pos = pMyBox->GetPos();
+	D3DXVECTOR3 pos = myInfo.pos;
 
 	// 相手の位置と大きさの取得
-	D3DXVECTOR3 TargetPos = pTargetBox->GetPos();
-
-	// 自分のデータの取得
-	CColliderAABB::Data myData = pMyBox->GetData();
-
-	// 相手のデータの取得
-	CColliderAABB::Data targetData = pTargetBox->GetData();
+	D3DXVECTOR3 TargetPos = otherInfo.pos;
 
 	// ターゲットの大きさ
-	D3DXVECTOR3 TargetSize = targetData.Size;
-	D3DXVECTOR3 TargetPosOld = targetData.posOld;
+	D3DXVECTOR3 TargetSize = otherInfo.Size;
+	D3DXVECTOR3 TargetPosOld = otherInfo.posOld;
 
 	// 自分の前回の位置
-	D3DXVECTOR3 posOldMin = myData.posOld - (myData.Size * HALF_VALUE);
-	D3DXVECTOR3 posOldMax = myData.posOld + (myData.Size * HALF_VALUE);
+	D3DXVECTOR3 posOldMin = myInfo.posOld - (myInfo.Size * HALF_VALUE);
+	D3DXVECTOR3 posOldMax = myInfo.posOld + (myInfo.Size * HALF_VALUE);
 
 	// 自分の位置
-	D3DXVECTOR3 posMin = pos - (myData.Size * HALF_VALUE);
-	D3DXVECTOR3 posMax = pos + (myData.Size * HALF_VALUE);
+	D3DXVECTOR3 posMin = pos - (myInfo.Size * HALF_VALUE);
+	D3DXVECTOR3 posMax = pos + (myInfo.Size * HALF_VALUE);
 
 	// ターゲットの前回の位置(tはターゲットのt)
 	D3DXVECTOR3 tPosOldMin = TargetPosOld - (TargetSize * HALF_VALUE);
@@ -145,7 +162,7 @@ bool CCollisionAABB::Collision(CColliderAABB* pMyBox, CColliderAABB* pTargetBox,
 			if (pushPos != nullptr)
 			{
 				// めり込んだ分戻す
-				pushPos->x = tPosMin.x - myData.Size.x * HALF_VALUE - 0.1f;
+				pushPos->x = tPosMin.x - myInfo.Size.x * HALF_VALUE - 0.1f;
 			}
 			return true;
 		}
@@ -164,7 +181,7 @@ bool CCollisionAABB::Collision(CColliderAABB* pMyBox, CColliderAABB* pTargetBox,
 			if (pushPos != nullptr)
 			{
 				// めり込んだ分戻す
-				pushPos->x = tPosMax.x + myData.Size.x * HALF_VALUE + 0.1f;
+				pushPos->x = tPosMax.x + myInfo.Size.x * HALF_VALUE + 0.1f;
 			}
 			return true;
 		}
@@ -188,7 +205,7 @@ bool CCollisionAABB::Collision(CColliderAABB* pMyBox, CColliderAABB* pTargetBox,
 			if (pushPos != nullptr)
 			{
 				// めり込んだ分戻す
-				pushPos->z = tPosMax.z + myData.Size.z * HALF_VALUE + 0.1f;
+				pushPos->z = tPosMax.z + myInfo.Size.z * HALF_VALUE + 0.1f;
 			}
 			return true;
 		}
@@ -205,7 +222,7 @@ bool CCollisionAABB::Collision(CColliderAABB* pMyBox, CColliderAABB* pTargetBox,
 			if (pushPos != nullptr)
 			{
 				// めり込んだ分戻す
-				pushPos->z = tPosMin.z - myData.Size.z * HALF_VALUE - 0.1f;
+				pushPos->z = tPosMin.z - myInfo.Size.z * HALF_VALUE - 0.1f;
 			}
 			return true;
 		}
@@ -239,7 +256,7 @@ bool CCollisionAABB::Collision(CColliderAABB* pMyBox, CColliderAABB* pTargetBox,
 
 	//	}
 	//}
-	
+
 	return false;
 }
 
@@ -260,19 +277,41 @@ CCollisionSphere::~CCollisionSphere()
 //================================================
 // 当たり判定(円vs円)
 //================================================
-bool CCollisionSphere::Collision(CColliderSphere* myCollider, CColliderSphere* otherCollider)
+bool CCollisionSphere::Collision(CCollider* myCollider, CCollider* otherCollider)
 {
+	// 自分の空間情報へのポインタの取得
+	CTransform* pMyTransform = myCollider->GetTransform();
+
+	// 相手の空間情報へのポインタの取得
+	CTransform* pOtherTransform = otherCollider->GetTransform();
+
+	// 自分の空間情報の取得
+	CTransform::Info myInfo = {};
+	CTransform::Info otherInfo = {};
+
+	if (pMyTransform != nullptr)
+	{
+		// 情報の取得
+		myInfo = pMyTransform->GetInfo();
+	}
+
+	if (pOtherTransform != nullptr)
+	{
+		// 情報の取得
+		otherInfo = pOtherTransform->GetInfo();
+	}
+
 	// 位置の取得
-	D3DXVECTOR3 pos = myCollider->GetPos();
+	D3DXVECTOR3 pos = myInfo.pos;
 
 	// 相手の位置
-	D3DXVECTOR3 otherPos = otherCollider->GetPos();
+	D3DXVECTOR3 otherPos = otherInfo.pos;
 
 	// 相手の半径
-	float fOtherRadius = otherCollider->GetRadius();
+	float fOtherRadius = otherInfo.fRadius;
 
 	// 自分の半径
-	float fMyRadius = myCollider->GetRadius();
+	float fMyRadius = myInfo.fRadius;
 
 	// 差分を求める
 	D3DXVECTOR3 diff = otherPos - pos;
@@ -309,42 +348,41 @@ CCollisionFOV::~CCollisionFOV()
 {
 }
 
-////================================================
-//// コライダーの作成
-////================================================
-//CCollisionFOV CCollisionFOV::CreateCollider(const D3DXVECTOR3 pos, const float fAngle, const float fAngleLeft, const float fAngleRight)
-//{
-//	//CCollisionFOV out;
-//
-//	//// 設定処理
-//	//out.SetPos(pos);
-//	//out.m_fNowAngle = fAngle;
-//	//out.m_fAngleLeft = fAngleLeft;
-//	//out.m_fAngleRight = fAngleRight;
-//
-//	//return out;
-//}
-
 //================================================
 // 視界の判定
 //================================================
-bool CCollisionFOV::Collision(const D3DXVECTOR3 otherpos, CColliderFOV* pFOV)
+bool CCollisionFOV::Collision(const D3DXVECTOR3 otherpos, CCollider* pFOV)
 {
+	// 自分の空間情報へのポインタの取得
+	CTransform* pTransform = pFOV->GetTransform();
+
+	// 自分の空間情報の取得
+	CTransform::Info Info = {};
+
+	if (pTransform != nullptr)
+	{
+		// 情報の取得
+		Info = pTransform->GetInfo();
+	}
+
 	// 位置の取得
-	D3DXVECTOR3 objectPos = pFOV->GetPos();
+	D3DXVECTOR3 objectPos = Info.pos;
 
 	// 前方までのベクトル
 	D3DXVECTOR3 vecFront = GetVector(otherpos, objectPos);
 
 	// データの取得
-	CColliderFOV::Data data = pFOV->GetData();
+	const CColliderFOV::Data *pData = static_cast<const CColliderFOV::Data*>(pFOV->GetData());
+
+	// データを取得できなかったら処理しない
+	if (pData == nullptr) return false;
 
 	D3DXVECTOR3 LeftPos; // 左の位置
 
 	// 左側の視界の端の位置を求める
-	LeftPos.x = objectPos.x + sinf(data.fNowAngle + data.fAngleLeft) * data.fLength;
+	LeftPos.x = objectPos.x + sinf(pData->fNowAngle + pData->fAngleLeft) * pData->fLength;
 	LeftPos.y = 0.0f;
-	LeftPos.z = objectPos.z + cosf(data.fNowAngle + data.fAngleLeft) * data.fLength;
+	LeftPos.z = objectPos.z + cosf(pData->fNowAngle + pData->fAngleLeft) * pData->fLength;
 
 	// 左側の視界のベクトルの作成
 	D3DXVECTOR3 VecLeft = GetVector(LeftPos, objectPos);
@@ -352,9 +390,9 @@ bool CCollisionFOV::Collision(const D3DXVECTOR3 otherpos, CColliderFOV* pFOV)
 	D3DXVECTOR3 RightPos; // 右の位置
 
 	// 右側の視界の端の位置を求める
-	RightPos.x = objectPos.x + sinf(data.fNowAngle + data.fAngleRight) * data.fLength;
+	RightPos.x = objectPos.x + sinf(pData->fNowAngle + pData->fAngleRight) * pData->fLength;
 	RightPos.y = 0.0f;
-	RightPos.z = objectPos.z + cosf(data.fNowAngle + data.fAngleRight) * data.fLength;
+	RightPos.z = objectPos.z + cosf(pData->fNowAngle + pData->fAngleRight) * pData->fLength;
 
 	// 右側の視界のベクトルの作成
 	D3DXVECTOR3 VecRight = GetVector(RightPos, objectPos);
@@ -377,16 +415,19 @@ bool CCollisionFOV::Collision(const D3DXVECTOR3 otherpos, CColliderFOV* pFOV)
 //================================================
 // カプセルコライダーの当たり判定
 //================================================
-bool CCollisionCapsule::Collision(CColliderCapsule* myCapsule, CColliderCapsule* otherCapsule,D3DXVECTOR3 *NearPos1, D3DXVECTOR3* NearPos2)
+bool CCollisionCapsule::Collision(CCollider* myCapsule, CCollider* otherCapsule,D3DXVECTOR3 *NearPos1, D3DXVECTOR3* NearPos2)
 {
 	// カプセルコライダーのデータ構造体を使用
 	using Data = CColliderCapsule::Data;
 
 	// 自分のデータの取得
-	Data myData = myCapsule->GetData();
+	const Data* pMyData = static_cast<const Data*>(myCapsule->GetData());
 
 	// 相手のデータの取得
-	Data otherData = otherCapsule->GetData();
+	const Data* pOtherData = static_cast<const Data*>(otherCapsule->GetData());
+
+	// データの取得が出来なかったら処理しない
+	if (pMyData == nullptr || pOtherData == nullptr) return false;
 
 	float param1, param2; // パラメーター1,2
 
@@ -394,10 +435,10 @@ bool CCollisionCapsule::Collision(CColliderCapsule* myCapsule, CColliderCapsule*
 
 	// 線分1と線分2の距離の取得
 	float fDistance = ClosestPtSegmentSegment(
-		myData.StartPos,
-		myData.EndPos,
-		otherData.StartPos,
-		otherData.EndPos,
+		pMyData->StartPos,
+		pMyData->EndPos,
+		pOtherData->StartPos,
+		pOtherData->EndPos,
 		&param1,
 		&param2,
 		&closestPos1,
@@ -417,8 +458,19 @@ bool CCollisionCapsule::Collision(CColliderCapsule* myCapsule, CColliderCapsule*
 		*NearPos2 = closestPos2;
 	}
 
+	// 空間情報の取得
+	CTransform* pMyTransform = myCapsule->GetTransform();
+	CTransform* pOtherTransform = myCapsule->GetTransform();
+
+	// データの取得が出来なかったら処理しない
+	if (pMyTransform == nullptr || pOtherTransform == nullptr) return false;
+
+	// 自分の空間情報の取得
+	CTransform::Info myInfo = pMyTransform->GetInfo();
+	CTransform::Info otherInfo = pMyTransform->GetInfo();
+
 	// 二つの円の半径を渡す
-	float fRadius = myData.fRadius + otherData.fRadius;
+	float fRadius = myInfo.fRadius + otherInfo.fRadius;
 
 	// 距離が半径以下だったら当たっている
 	if (fDistance <= fRadius)
@@ -432,19 +484,44 @@ bool CCollisionCapsule::Collision(CColliderCapsule* myCapsule, CColliderCapsule*
 //================================================
 // 円との当たり判定
 //================================================
-bool CCollisionCapsule::CollisionSphere(CColliderCapsule* pCapsule, CColliderSphere* pSphere)
+bool CCollisionCapsule::CollisionSphere(CCollider* pCapsule, CCollider* pSphere)
 {
+	// カプセルの空間情報へのポインタの取得
+	CTransform* pCapsuleTransform = pCapsule->GetTransform();
+
+	// 円の空間情報へのポインタの取得
+	CTransform* pSphereTransform = pSphere->GetTransform();
+
+	// 自分の空間情報の取得
+	CTransform::Info capsuleInfo = {};
+	CTransform::Info sphereInfo = {};
+
+	if (pCapsuleTransform != nullptr)
+	{
+		// 情報の取得
+		capsuleInfo = pCapsuleTransform->GetInfo();
+	}
+
+	if (pSphereTransform != nullptr)
+	{
+		// 情報の取得
+		sphereInfo = pSphereTransform->GetInfo();
+	}
+
 	// カプセルコライダーのデータ構造体を使用
 	using CapsuleData = CColliderCapsule::Data;
 
 	// 自分のデータの取得
-	CapsuleData Capsule = pCapsule->GetData();
+	const CapsuleData *pCapsuleData = static_cast<const CapsuleData*>(pCapsule->GetData());
+
+	// 取得できなかったら処理しない
+	if (pCapsuleData == nullptr) return false;
 
 	// 円の位置の取得
-	D3DXVECTOR3 spherePos = pSphere->GetPos();
+	D3DXVECTOR3 spherePos = sphereInfo.pos;
 
 	// 円の半径の取得
-	float fSphereRadius = pSphere->GetRadius();
+	float fSphereRadius = sphereInfo.fRadius;
 
 	float param1, param2; // パラメーター1,2
 
@@ -452,8 +529,8 @@ bool CCollisionCapsule::CollisionSphere(CColliderCapsule* pCapsule, CColliderSph
 
 	// 線分と円の距離を求める
 	float fDistance = ClosestPtSegmentSegment(
-		Capsule.StartPos,
-		Capsule.EndPos,
+		pCapsuleData->StartPos,
+		pCapsuleData->EndPos,
 		spherePos,
 		spherePos,
 		&param1,
@@ -464,8 +541,17 @@ bool CCollisionCapsule::CollisionSphere(CColliderCapsule* pCapsule, CColliderSph
 	// 距離を求める
 	fDistance = sqrtf(fDistance);
 
+	// 空間情報の取得
+	CTransform* pCapTransform = pCapsule->GetTransform();
+
+	// データの取得が出来なかったら処理しない
+	if (pCapTransform == nullptr) return false;
+
+	// 自分の空間情報の取得
+	CTransform::Info myInfo = pCapTransform->GetInfo();
+
 	// 二つの円の半径を渡す
-	float fRadius = Capsule.fRadius + fSphereRadius;
+	float fRadius = myInfo.fRadius + fSphereRadius;
 
 	// 距離が半径以下だったら当たっている
 	if (fDistance <= fRadius)

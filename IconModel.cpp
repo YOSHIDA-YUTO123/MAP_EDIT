@@ -121,9 +121,6 @@ void CIconModel::Draw(void)
 		// テクスチャクラスの取得
 		CTextureManager* pTexture = CManager::GetTexture();
 
-		// モデルクラスの取得
-		CModelManager* pModel = CManager::GetModel();
-
 		//計算用のマトリックス
 		D3DXMATRIX mtxRot, mtxTrans, mtxScal, mtxParent;
 

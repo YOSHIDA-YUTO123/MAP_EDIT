@@ -157,6 +157,7 @@
     <ClCompile Include="CharacterManager.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="Collision.cpp" />
+    <ClCompile Include="CollisionObject3D.cpp" />
     <ClCompile Include="cylinder.cpp" />
     <ClCompile Include="DebugLog.cpp" />
     <ClCompile Include="debugproc.cpp" />
@@ -208,6 +209,7 @@
     <ClCompile Include="statebase.cpp" />
     <ClCompile Include="textureManager.cpp" />
     <ClCompile Include="TextureMTManager.cpp" />
+    <ClCompile Include="transform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="billboard.h" />
@@ -217,6 +219,7 @@
     <ClInclude Include="CharacterManager.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Collision.h" />
+    <ClInclude Include="CollisionObject3D.h" />
     <ClInclude Include="cylinder.h" />
     <ClInclude Include="DebugLog.h" />
     <ClInclude Include="debugproc.h" />
@@ -256,6 +259,7 @@
     <ClInclude Include="object3D.h" />
     <ClInclude Include="Object3DAnim.h" />
     <ClInclude Include="Object3DMT.h" />
+    <ClInclude Include="ObjectCollision.h" />
     <ClInclude Include="objectX.h" />
     <ClInclude Include="Orbit.h" />
     <ClInclude Include="pause.h" />
@@ -265,6 +269,7 @@
     <ClInclude Include="statebase.h" />
     <ClInclude Include="textureManager.h" />
     <ClInclude Include="TextureMTManager.h" />
+    <ClInclude Include="transform.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="imgui.ini" />

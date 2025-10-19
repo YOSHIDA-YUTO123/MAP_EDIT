@@ -23,6 +23,7 @@
 class CMeshCylinder;
 class CColliderSphere;
 class CMeshField;
+class CTransform;
 
 //***************************************************
 // メッシュフィールドのマネージャークラスの定義
@@ -46,7 +47,8 @@ private:
 	void SetVtx(CMeshField *pMeshField);
 
 	static std::unique_ptr<CMeshFieldManager> m_pInstance; // 自分のインスタンス
-	std::unique_ptr<CColliderSphere> m_pBrushSphere;	   // ブラシの円の判定	
+	std::unique_ptr<CColliderSphere> m_pBrushSphere;	   // ブラシの円の判定
+	std::unique_ptr<CTransform> m_pTransform;			   // 空間情報のポインタ
 	CMeshCylinder* m_pMeshCylinder;						   // シリンダーの取得
 	D3DXCOLOR m_col;									   // 色
 	D3DXVECTOR3 m_BrushPos;								   // ブラシの位置

@@ -26,6 +26,7 @@
 #include "IconModel.h"
 #include "object3D.h"
 #include "TextureMTManager.h"
+#include "transform.h"
 
 // jsonの使用
 using json = nlohmann::json;
@@ -62,10 +63,10 @@ CMapObjectManager* CMapObjectManager::GetInstance(void)
 //===================================================
 // マップオブジェクトの生成処理
 //===================================================
-CMapObject* CMapObjectManager::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, const char* pModelFileName)
+CMapObject* CMapObjectManager::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, const char* pModelFileName, const char* pType)
 {
 	// マップオブジェクトの生成
-	CMapObject* pMapObject = CMapObject::Create(pos, rot, pModelFileName);
+	CMapObject* pMapObject = CMapObject::Create(pos, rot, pModelFileName, pType);
 
 	if (pMapObject == nullptr)
 	{
@@ -442,6 +443,7 @@ HRESULT CMapObjectManager::Register(void)
 			}
 		}
 
+		pModelManager->Register(modelPath.c_str());
 		m_aModelPath.push_back(modelPath);
 	}
 
@@ -487,8 +489,20 @@ void CMapObjectManager::UpdateSelectObj(void)
 
 	if (ImGui::Button(u8"向きのリセット", ImVec2(300.0, 0)))
 	{
-		// 向きの設定
-		m_pSelect->SetRotation({ 0.0f,0.0f,0.0f });
+		// 空間情報の取得
+		CTransform* pTransform = m_pSelect->GetTransform();
+
+		// 取得出来たら
+		if (pTransform != nullptr)
+		{
+			// 情報の取得
+			CTransform::Info transformInfo = pTransform->GetInfo();
+
+			transformInfo.rot = Const::VEC3_NULL;
+
+			// 向きの設定
+			pTransform->SetInfo(transformInfo);
+		}
 	}
 
 	if (pKeyboard->GetTrigger(DIK_DELETE) || ImGui::Button(u8"消去", ImVec2(300.0, 0)))
@@ -512,17 +526,27 @@ void CMapObjectManager::Save(void)
 		// nullだったら処理しない
 		if ((*itr) == nullptr) continue;
 
+		// 空間情報の取得
+		CTransform* pTransform = (*itr)->GetTransform();
+
+		// 取得出来たら
+		if (pTransform == nullptr) continue;
+		
+		// 情報の取得
+		CTransform::Info transformInfo = pTransform->GetInfo();
+	
 		// 位置の取得
-		D3DXVECTOR3 pos = (*itr)->GetPosition();
+		D3DXVECTOR3 pos = transformInfo.pos;
 
 		// 向きの取得
-		D3DXVECTOR3 rot = (*itr)->GetRotation();
+		D3DXVECTOR3 rot = transformInfo.rot;
 
 		json obj =
 		{
 			{"file_path",(*itr)->GetPath()},
 			{"position",{{"x",pos.x},{"y",pos.y},{"z",pos.z}}},
-			{"rotation",{{"x",rot.x},{"y",rot.y},{"z",rot.z}}}
+			{"rotation",{{"x",rot.x},{"y",rot.y},{"z",rot.z}}},
+			{"type",(*itr)->GetType()},
 		};
 
 		config["MODEL_INFO"].push_back(obj);
@@ -580,8 +604,10 @@ void CMapObjectManager::Load(void)
 		float rotY = obj["rotation"]["y"];
 		float rotZ = obj["rotation"]["z"];
 
+		std::string type = obj["type"];
+
 		// モデルの生成
-		Create(D3DXVECTOR3(posX, posY, posZ), D3DXVECTOR3(rotX, rotY, rotZ), filepath.c_str());
+		Create(D3DXVECTOR3(posX, posY, posZ), D3DXVECTOR3(rotX, rotY, rotZ), filepath.c_str(), type.c_str());
 	}
 }
 
@@ -645,10 +671,16 @@ void CMapObjectManager::SetCamerafocus(void)
 	{
 		D3DXVECTOR3 selectPos = Const::VEC3_NULL;
 
-		if (m_pSelect != nullptr)
+		// 空間情報の取得
+		CTransform* pTransform = m_pSelect->GetTransform();
+
+		if (m_pSelect != nullptr && pTransform != nullptr)
 		{
+			// 情報の取得
+			CTransform::Info transformInfo = pTransform->GetInfo();
+
 			// 位置の取得
-			selectPos = m_pSelect->GetPosition();
+			selectPos = transformInfo.pos;
 		}
 
 		// カメラの取得
@@ -730,15 +762,24 @@ void CMapObjectManager::CopyAndPaste(CInputKeyboard *pKeyboard)
 	// 選択されていなかったら処理しない
 	if (m_pCopyObj != nullptr && pKeyboard->GetPress(DIK_LCONTROL) && pKeyboard->GetTrigger(DIK_V))
 	{
-		// 位置の取得
-		D3DXVECTOR3 pos = m_pCopyObj->GetPosition();
-		D3DXVECTOR3 rot = m_pCopyObj->GetRotation();
+		// 空間情報の取得
+		CTransform* pTransform = m_pCopyObj->GetTransform();
 
-		// パスの取得
-		const char* pModelPath = m_pCopyObj->GetPath();
+		if (m_pSelect != nullptr && pTransform != nullptr)
+		{
+			// 情報の取得
+			CTransform::Info transformInfo = pTransform->GetInfo();
 
-		// 生成
-		Create(pos, rot, pModelPath);
+			// 位置の取得
+			D3DXVECTOR3 pos = transformInfo.pos;
+			D3DXVECTOR3 rot = transformInfo.rot;
+
+			// パスの取得
+			const char* pModelPath = m_pCopyObj->GetPath();
+
+			// 生成
+			Create(pos, rot, pModelPath, m_pCopyObj->GetType());
+		}
 	}
 
 	// ctrl + c

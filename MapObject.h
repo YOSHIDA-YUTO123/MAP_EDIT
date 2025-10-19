@@ -14,19 +14,28 @@
 //***************************************************
 // インクルードファイル
 //***************************************************
-#include "object.h"
+#include "CollisionObject3D.h"
 #include <string>
 
 //***************************************************
 // マップのオブジェクトのクラスの定義
 //***************************************************
-class CMapObject : public CObject
+class CMapObject : public CCollisionObject3D
 {
 public:
+
+	// 種類
+	typedef enum
+	{
+		TYPE_STATIC = 0,
+		TYPE_COLLISION,
+		TYPE_MAX
+	}TYPE;
+
 	CMapObject();
 	~CMapObject();
 
-	static CMapObject* Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, const char* pModelFileName);
+	static CMapObject* Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, const char* pModelFileName, const char* pType);
 
 	HRESULT Init(void) override;
 	void Uninit(void) override;
@@ -34,13 +43,11 @@ public:
 	void Draw(void) override;
 	void SetALv(const float fAlv) { m_fAlv = fAlv; }
 	void Register(const char* pModelFileName);
-	void SetRotation(const D3DXVECTOR3 rot) { m_rot = rot; }
 	void UpdateMove(void);
 	void SetMove(const float fMove) { m_fMove = fMove; }
 
 	const char* GetPath(void) const { return m_aModelPath.c_str(); }
-	D3DXVECTOR3 GetPosition(void) const { return m_pos; }
-	D3DXVECTOR3 GetRotation(void) const { return m_rot; }
+	const char* GetType(void) const { return m_aType.c_str(); }
 
 	/// <summary>
 	/// マウスとモデルの当たり判定
@@ -58,10 +65,8 @@ public:
 private:
 	static constexpr float MOVE_VALUE = 5.0f; // 移動量
 
-	D3DXVECTOR3 m_pos;			// 位置
-	D3DXVECTOR3 m_rot;			// 向き
-	D3DXMATRIX m_mtxWorld;		// ワールドマトリックス
 	std::string m_aModelPath;	// モデルのパス
+	std::string m_aType;		// 種類の情報
 	float m_fAlv;				// アルファ値
 	float m_fMove;				// 移動量
 	int m_nModelIdx;			// モデルのインデックス

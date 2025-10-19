@@ -128,6 +128,7 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 	// ƒ‰ƒCƒg‚Ì¶¬
 	m_pLight = new CLight;
 	m_pLight->Init();
+	//m_pLight->SetPoint(D3DXVECTOR3(0.0f, 500.0f, 0.0f), 1000.0f, Const::WHITE, Const::WHITE);
 	m_pLight->SetDirectional(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(0.0f, -1.0f, 0.0f), D3DXVECTOR3(0.0f, 100.0f, 0.0f));
 
 	CEdit::Create();
@@ -334,8 +335,6 @@ void CManager::Update(void)
 		bWireFrame = bWireFrame ? false : true;
 	}
 
-#ifdef _DEBUG
-
 	if (bWireFrame == true)
 	{
 		m_pRenderer->onWireFrame();
@@ -344,8 +343,6 @@ void CManager::Update(void)
 	{
 		m_pRenderer->offWireFrame();
 	}
-
-#endif // _DEBUG
 }
 //===================================================
 // •`‰æˆ—

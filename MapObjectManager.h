@@ -47,7 +47,7 @@ public:
 	/// <param name="pos"></param>
 	/// <param name="pModelFileName"></param>
 	/// <returns>マップオブジェクトのインスタンス</returns>
-	CMapObject* Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, const char* pModelFileName);
+	CMapObject* Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot, const char* pModelFileName, const char* pType);
 
 	/// <summary>
 	/// マップオブジェクトのリストの取得

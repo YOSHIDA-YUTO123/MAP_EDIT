@@ -19,6 +19,20 @@
 #include "MapObjectManager.h"
 #include "camera.h"
 #include "meshfield.h"
+#include "transform.h"
+
+//***************************************************
+// 定数宣言
+//***************************************************
+namespace MAPOBJ_INFO
+{
+	// オブジェクトの状態
+	const char* TYPE[CMapObject::TYPE_MAX] =
+	{
+		"static",
+		"collision"
+	};
+};
 
 //===================================================
 // コンストラクタ
@@ -28,10 +42,8 @@ CMapObject::CMapObject()
 	m_fMove = MOVE_VALUE;
 	m_bMouseUp = true;
 	m_fAlv = 1.0f;
-	m_pos = Const::VEC3_NULL;
-	m_rot = Const::VEC3_NULL;
-	D3DXMatrixIdentity(&m_mtxWorld);
 	m_nModelIdx = -1;
+	m_aType = MAPOBJ_INFO::TYPE[CMapObject::TYPE_STATIC];
 }
 
 //===================================================
@@ -45,15 +57,13 @@ CMapObject::~CMapObject()
 //===================================================
 // 生成処理
 //===================================================
-CMapObject* CMapObject::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot,const char *pModelFileName)
+CMapObject* CMapObject::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot,const char *pModelFileName,const char *pType)
 {
 	CMapObject* pMapObject = new CMapObject;
 
-	pMapObject->m_pos = pos;
-	pMapObject->m_rot = rot;
-
 	// 番号の登録
 	pMapObject->Register(pModelFileName);
+	pMapObject->m_aType = pType;
 
 	// 初期化処理
 	if (FAILED(pMapObject->Init()))
@@ -63,6 +73,23 @@ CMapObject* CMapObject::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot,cons
 		return nullptr;
 	}
 
+	// 空間情報の取得
+	CTransform* pTransform = pMapObject->GetTransform();
+
+	if (pTransform == nullptr)
+	{
+		assert(false && "空間情報無し");
+	}
+
+	// 情報の取得
+	CTransform::Info info = pTransform->GetInfo();
+
+	info.pos = pos;
+	info.rot = rot;
+	
+	// 情報の設定
+	pTransform->SetInfo(info);
+
 	return pMapObject;
 }
 
@@ -71,6 +98,12 @@ CMapObject* CMapObject::Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 rot,cons
 //===================================================
 HRESULT CMapObject::Init(void)
 {
+	// 初期化処理
+	if (FAILED(CCollisionObject3D::Init()))
+	{
+		return E_FAIL;
+	}
+
 	// モデルがないなら
 	if (m_nModelIdx == -1)
 	{
@@ -86,7 +119,7 @@ HRESULT CMapObject::Init(void)
 void CMapObject::Uninit(void)
 {
 	// 終了処理
-	CObject::Release();
+	CCollisionObject3D::Uninit();
 }
 
 //===================================================
@@ -102,11 +135,26 @@ void CMapObject::Update(void)
 
 	float fHeight = 0.0f;
 
+	// 更新処理
+	CCollisionObject3D::Update();
+
+	// 空間情報の取得
+	CTransform* pTransform = CCollisionObject3D::GetTransform();
+
+	// nullだったら処理を飛ばす
+	if (pTransform == nullptr) return;
+
+	// 情報の取得
+	CTransform::Info info = pTransform->GetInfo();
+
 	// フィールドの当たり判定
-	if (pMeshField->Collision(m_pos, &fHeight))
+	if (pMeshField->Collision(info.pos, &fHeight))
 	{
-		m_pos.y = fHeight;
+		info.pos.y = fHeight;
 	}
+
+	// 空間情報の設定
+	pTransform->SetInfo(info);
 }
 
 //===================================================
@@ -130,19 +178,8 @@ void CMapObject::Draw(void)
 
 	D3DXMATERIAL* pMat;//マテリアルデータへのポインタ
 
-	//ワールドマトリックスの初期化
-	D3DXMatrixIdentity(&m_mtxWorld);
-
-	//向きを反映
-	D3DXMatrixRotationYawPitchRoll(&mtxRot, m_rot.y, m_rot.x, m_rot.z);
-	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxRot);
-
-	//位置を反映
-	D3DXMatrixTranslation(&mtxTrans, m_pos.x, m_pos.y, m_pos.z);
-	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxTrans);
-
-	//ワールドマトリックスの設定
-	pDevice->SetTransform(D3DTS_WORLD, &m_mtxWorld);
+	// 更新処理
+	CCollisionObject3D::Draw();
 
 	//現在のマテリアルを取得
 	pDevice->GetMaterial(&matDef);
@@ -207,6 +244,15 @@ void CMapObject::UpdateMove(void)
 	// カメラの取得
 	CCamera* pCamera = CManager::GetCamera();
 
+	// 空間情報の取得
+	CTransform* pTransform = CCollisionObject3D::GetTransform();
+
+	// nullだったら処理を飛ばす
+	if (pTransform == nullptr) return;
+
+	// 情報の取得
+	CTransform::Info info = pTransform->GetInfo();
+
 	// カメラを取得出来なかったら処理しない
 	if (pCamera == nullptr) return;
 
@@ -217,48 +263,51 @@ void CMapObject::UpdateMove(void)
 	{
 		if (pKeyboard->GetPress(DIK_W))
 		{
-			m_pos.x += sinf(fCameraAngle - D3DX_PI * 0.25f) * m_fMove;
-			m_pos.z += cosf(fCameraAngle - D3DX_PI * 0.25f) * m_fMove;
+			info.pos.x += sinf(fCameraAngle - D3DX_PI * 0.25f) * m_fMove;
+			info.pos.z += cosf(fCameraAngle - D3DX_PI * 0.25f) * m_fMove;
 		}
 		else if (pKeyboard->GetPress(DIK_S))
 		{
-			m_pos.x += sinf(fCameraAngle - D3DX_PI * 0.75f) * m_fMove;
-			m_pos.z += cosf(fCameraAngle - D3DX_PI * 0.75f) * m_fMove;
+			info.pos.x += sinf(fCameraAngle - D3DX_PI * 0.75f) * m_fMove;
+			info.pos.z += cosf(fCameraAngle - D3DX_PI * 0.75f) * m_fMove;
 		}
 		else
 		{
-			m_pos.x += sinf(fCameraAngle - D3DX_PI * 0.5f) * m_fMove;
-			m_pos.z += cosf(fCameraAngle - D3DX_PI * 0.5f) * m_fMove;
+			info.pos.x += sinf(fCameraAngle - D3DX_PI * 0.5f) * m_fMove;
+			info.pos.z += cosf(fCameraAngle - D3DX_PI * 0.5f) * m_fMove;
 		}
 	}
 	else if (pKeyboard->GetPress(DIK_D))
 	{
 		if (pKeyboard->GetPress(DIK_W))
 		{
-			m_pos.x += sinf(fCameraAngle + D3DX_PI * 0.25f) * m_fMove;
-			m_pos.z += cosf(fCameraAngle + D3DX_PI * 0.25f) * m_fMove;
+			info.pos.x += sinf(fCameraAngle + D3DX_PI * 0.25f) * m_fMove;
+			info.pos.z += cosf(fCameraAngle + D3DX_PI * 0.25f) * m_fMove;
 		}
 		else if (pKeyboard->GetPress(DIK_S))
 		{
-			m_pos.x += sinf(fCameraAngle + D3DX_PI * 0.75f) * m_fMove;
-			m_pos.z += cosf(fCameraAngle + D3DX_PI * 0.75f) * m_fMove;
+			info.pos.x += sinf(fCameraAngle + D3DX_PI * 0.75f) * m_fMove;
+			info.pos.z += cosf(fCameraAngle + D3DX_PI * 0.75f) * m_fMove;
 		}
 		else
 		{
-			m_pos.x += sinf(fCameraAngle + D3DX_PI * 0.5f) * m_fMove;
-			m_pos.z += cosf(fCameraAngle + D3DX_PI * 0.5f) * m_fMove;
+			info.pos.x += sinf(fCameraAngle + D3DX_PI * 0.5f) * m_fMove;
+			info.pos.z += cosf(fCameraAngle + D3DX_PI * 0.5f) * m_fMove;
 		}
 	}
 	else if (pKeyboard->GetPress(DIK_W))
 	{
-		m_pos.x += sinf(fCameraAngle) * m_fMove;
-		m_pos.z += cosf(fCameraAngle) * m_fMove;
+		info.pos.x += sinf(fCameraAngle) * m_fMove;
+		info.pos.z += cosf(fCameraAngle) * m_fMove;
 	}
 	else if (pKeyboard->GetPress(DIK_S))
 	{
-		m_pos.x += sinf(fCameraAngle + D3DX_PI) * m_fMove;
-		m_pos.z += cosf(fCameraAngle + D3DX_PI) * m_fMove;
+		info.pos.x += sinf(fCameraAngle + D3DX_PI) * m_fMove;
+		info.pos.z += cosf(fCameraAngle + D3DX_PI) * m_fMove;
 	}
+
+	// 情報の設定
+	pTransform->SetInfo(info);
 }
 
 //===================================================
@@ -289,8 +338,17 @@ bool CMapObject::CollisionMouse(float* pDistance)
 	// レイの取得
 	math::GetMouseRay(&rayOrigin, &rayDir);
 
+	// 空間情報の取得
+	CTransform* pTransform = CCollisionObject3D::GetTransform();
+
+	// nullだったら処理を飛ばす
+	if (pTransform == nullptr) return false;
+
+	// 情報の取得
+	CTransform::Info info = pTransform->GetInfo();
+
 	// モデルのワールド行列
-	D3DXMATRIX matWorld = m_mtxWorld;
+	D3DXMATRIX matWorld = info.mtxWorld;
 
 	// 逆行列
 	D3DXMATRIX matInvWorld;
@@ -327,10 +385,19 @@ bool CMapObject::CollisionMouse(float* pDistance)
 //===================================================
 void CMapObject::SetInfo(void)
 {
-	// 情報の設定
-	ImGui::DragFloat3(u8"位置", m_pos, 0.5f);
+	// 空間情報の取得
+	CTransform* pTransform = CCollisionObject3D::GetTransform();
 
-	D3DXVECTOR3 rot = D3DXToDegree(m_rot);
+	// nullだったら処理を飛ばす
+	if (pTransform == nullptr) return;
+
+	// 情報の取得
+	CTransform::Info info = pTransform->GetInfo();
+
+	// 情報の設定
+	ImGui::DragFloat3(u8"位置", info.pos, 0.5f);
+
+	D3DXVECTOR3 rot = D3DXToDegree(info.rot);
 
 	// 情報の設定
 	if (ImGui::DragFloat3(u8"向き", rot, 0.5f, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI)))
@@ -341,9 +408,35 @@ void CMapObject::SetInfo(void)
 		rot.z = Wrap(rot.z, D3DXToDegree(-D3DX_PI), D3DXToDegree(D3DX_PI));
 	}
 	
-	
+	static int nSelect = 0;
+
+	if (ImGui::BeginCombo(u8"###state", m_aType.c_str()))
+	{
+		int nCnt = 0;
+
+		for (auto& list : MAPOBJ_INFO::TYPE)
+		{
+			bool bSelect = (nSelect == nCnt);
+
+			if (ImGui::Selectable(list, bSelect)) // 項目をクリックしたとき
+			{
+				nSelect = nCnt; // 選択を更新
+				m_aType = list;
+			}
+			if (bSelect)
+			{
+				ImGui::SetItemDefaultFocus(); // デフォルトフォーカス設定（視認性向上）
+			}
+			nCnt++;
+		}
+		ImGui::EndCombo();
+	}
+
 	// 角度を設定
-	m_rot = D3DXToRadian(rot);
+	info.rot = D3DXToRadian(rot);
+
+	// 情報の設定
+	pTransform->SetInfo(info);
 }
 
 //===================================================
@@ -378,6 +471,15 @@ void CMapObject::SetMouseDrag(void)
 		// マウスを離した
 		m_bMouseUp = true;
 	}
+
+	// 空間情報の取得
+	CTransform* pTransform = CCollisionObject3D::GetTransform();
+
+	// nullだったら処理を飛ばす
+	if (pTransform == nullptr) return;
+
+	// 情報の取得
+	CTransform::Info info = pTransform->GetInfo();
 
 	// マウスを離していないなら
 	if (!m_bMouseUp)
@@ -417,6 +519,9 @@ void CMapObject::SetMouseDrag(void)
 			move = camRight * MouseMove.x + camUp * -MouseMove.y;
 		}
 		// 位置の更新
-		m_pos += move;
+		info.pos += move;
 	}
+
+	// 情報の設定
+	pTransform->SetInfo(info);
 }
