@@ -1,39 +1,39 @@
 {
     "MODEL_INFO": [
         {
-            "file_path": "data/MODEL/MapObjectFile/02_armR.x",
+            "file_path": "data/MODEL/MapObjectFile/test00.x",
             "position": {
-                "x": -94.7507553100586,
-                "y": 0.0,
-                "z": 19.126953125
+                "x": 286.35174560546875,
+                "y": 40.09529495239258,
+                "z": 131.8321533203125
             },
             "rotation": {
                 "x": 0.0,
-                "y": 0.0,
+                "y": -0.6108651757240295,
                 "z": 0.0
             },
             "type": "static"
         },
         {
-            "file_path": "data/MODEL/MapObjectFile/01_head.x",
+            "file_path": "data/MODEL/MapObjectFile/test00.x",
             "position": {
-                "x": -29.6962890625,
-                "y": 0.0,
-                "z": 56.1622314453125
+                "x": 10.351730346679688,
+                "y": 36.53126907348633,
+                "z": 130.0161895751953
             },
             "rotation": {
                 "x": 0.0,
-                "y": 0.0,
+                "y": 0.5846849679946899,
                 "z": 0.0
             },
             "type": "static"
         },
         {
-            "file_path": "data/MODEL/MapObjectFile/00_body.x",
+            "file_path": "data/MODEL/MapObjectFile/test00.x",
             "position": {
-                "x": 320.8428649902344,
-                "y": 0.0,
-                "z": -29.06109619140625
+                "x": 140.3517303466797,
+                "y": 40.09529495239258,
+                "z": 131.83212280273438
             },
             "rotation": {
                 "x": 0.0,

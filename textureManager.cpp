@@ -70,9 +70,6 @@ int CTextureManager::Register(const char* pFilename)
 		// テクスチャの情報
 		TextureInfo info;
 
-		// 値をクリアしておく
-		memset(&info, NULL, sizeof(info));
-
 		// テクスチャの読み込み
 		if (FAILED(D3DXCreateTextureFromFile(pDevice,
 			pFilename,

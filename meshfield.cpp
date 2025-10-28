@@ -115,6 +115,8 @@ CMeshField* CMeshField::Create(const D3DXVECTOR3 pos, const int nSegH, const int
 //================================================
 HRESULT CMeshField::Init(void)
 {
+	LoadTexture();
+
 	// デバイスの取得
 	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
 
@@ -141,7 +143,7 @@ HRESULT CMeshField::Init(void)
 	}
 
 	// テクスチャのIDの設定
-	SetTextureID("field.png");
+	SetTextureID(m_aTexturePath.c_str());
 
 	// 頂点のカウント
 	int nCntVtx = 0;
@@ -1090,5 +1092,39 @@ void CMeshField::Load(void)
 
 	file.clear();
 	file.close();
+}
+
+//================================================
+// テクスチャのロード
+//================================================
+void CMeshField::LoadTexture(void)
+{
+	std::fstream file("data/system.ini");
+	std::string line;
+
+	std::string texturePath;
+
+	if (file.is_open())
+	{
+		// ファイルを一行づつ読み取る
+		while (std::getline(file, line))
+		{
+			if (line.find("FIELD_TEXTURE") != std::string::npos)
+			{
+				// = の位置を求める
+				size_t pos = line.find('=');
+
+				texturePath = line.substr(pos + 1);
+
+				texturePath.erase(0, texturePath.find_first_not_of(" \t\"")); // 前の空白の除去
+				texturePath.erase(texturePath.find_last_not_of(" \t\"") + 1); // 後ろの空白の除去
+			}
+		}
+
+		file.clear();
+		file.close();
+	}
+
+	m_aTexturePath = texturePath;
 }
 

@@ -17,6 +17,7 @@
 #include"object.h"
 #include<vector>
 #include <memory> 
+#include <string>
 
 //************************************************
 // 前方宣言
@@ -66,10 +67,13 @@ public:
 	void Save(void); // セーブ処理
 	void Load(void); // ロード処理
 private:
+	void LoadTexture(void);
+
 	static constexpr int MAX_VERTEX = (MAX_SEGMENT_H * MAX_SEGMENT_V); // 最大の頂点数
 
 	std::unique_ptr<CTransform> m_pTransform;  // 空間情報
 	std::unique_ptr<CColliderSphere> m_pSphere; // 円のコライダー
+	std::string m_aTexturePath;					// テクスチャのパス
 
 	LPDIRECT3DVERTEXBUFFER9 m_pVtxBuffer;	// 頂点バッファへのポインタ
 	LPDIRECT3DINDEXBUFFER9 m_pIdxBuffer;	// インデックスバッファへのポインタ
