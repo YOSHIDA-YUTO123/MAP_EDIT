@@ -84,10 +84,13 @@ private:
 	void SetFilePath(void);
 	void SetCamerafocus(void);
 	void CopyAndPaste(CInputKeyboard* pKeyboard);
+	void LoadFileName(void);
+	void SetLoadFile(void);
 
 	static std::unique_ptr<CMapObjectManager> m_pInstance; // 自分のインスタンス
 	static std::vector<CMapObject*> m_pMapObjectList;	   // マップオブジェクトのリスト
 	static std::vector<std::string> m_aModelPath;		   // モデルのパスのリスト
+	std::string m_aLoadFileName;						   // 読み込むファイル名
 	CMapObject* m_pSelect;								   // 選択中のマップオブジェクト
 	CMapObject* m_pCopyObj;								   // コピーしたオブジェクトの情報
 	float m_fMove;										   // 移動量

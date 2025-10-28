@@ -12,6 +12,7 @@
 #include"math.h"
 #include"Collider.h"
 #include "transform.h"
+#include "debugproc.h"
 
 using namespace Const; // 名前空間Constを使用
 using namespace math; // 名前空間を使用
@@ -24,7 +25,7 @@ constexpr float HALF_VALUE = 0.5f; // 半分
 //================================================
 CCollision::CCollision(TYPE type) : m_type(type)
 {
-	m_pos = VEC3_NULL;
+	
 }
 
 //================================================
@@ -37,7 +38,7 @@ CCollision::~CCollision()
 //================================================
 // 当たり判定の生成処理
 //================================================
-CCollision* CCollision::Create(const D3DXVECTOR3 pos, const TYPE type)
+CCollision* CCollision::Create(const TYPE type)
 {
 	// 当たり判定のポインタ
 	CCollision* pCollision = nullptr;
@@ -57,9 +58,6 @@ CCollision* CCollision::Create(const D3DXVECTOR3 pos, const TYPE type)
 	//default:
 	//	break;
 	//}
-
-	// 位置の設定
-	pCollision->m_pos = pos;
 
 	// 種類を代入
 	pCollision->m_type = type;
@@ -138,10 +136,12 @@ bool CCollisionAABB::Collision(CCollider* pMyBox, CCollider* pTargetBox, D3DXVEC
 	// Yの範囲に入っているか
 	const bool bCheckRangeY = posOldMin.y <= tPosOldMax.y && posOldMax.y >= tPosOldMin.y;
 
+	bool bHit = false;
+
 	// 範囲外だったら
 	if (!bCheckRangeY)
 	{
-		return false;
+		return bHit;
 	}
 
 	// Zの範囲内に入っている
@@ -164,7 +164,7 @@ bool CCollisionAABB::Collision(CCollider* pMyBox, CCollider* pTargetBox, D3DXVEC
 				// めり込んだ分戻す
 				pushPos->x = tPosMin.x - myInfo.Size.x * HALF_VALUE - 0.1f;
 			}
-			return true;
+			bHit = true;
 		}
 		// 右から左にめり込んだ
 		else if (tPosOldMax.x <= posOldMin.x &&
@@ -183,7 +183,7 @@ bool CCollisionAABB::Collision(CCollider* pMyBox, CCollider* pTargetBox, D3DXVEC
 				// めり込んだ分戻す
 				pushPos->x = tPosMax.x + myInfo.Size.x * HALF_VALUE + 0.1f;
 			}
-			return true;
+			bHit = true;
 		}
 	}
 
@@ -207,7 +207,7 @@ bool CCollisionAABB::Collision(CCollider* pMyBox, CCollider* pTargetBox, D3DXVEC
 				// めり込んだ分戻す
 				pushPos->z = tPosMax.z + myInfo.Size.z * HALF_VALUE + 0.1f;
 			}
-			return true;
+			bHit = true;
 		}
 		else if (tPosOldMin.z >= posOldMax.z &&
 			tPosMin.z < posMax.z)
@@ -224,9 +224,18 @@ bool CCollisionAABB::Collision(CCollider* pMyBox, CCollider* pTargetBox, D3DXVEC
 				// めり込んだ分戻す
 				pushPos->z = tPosMin.z - myInfo.Size.z * HALF_VALUE - 0.1f;
 			}
-			return true;
+			bHit = true;
 		}
 	}
+
+#ifdef _DEBUG
+	// 結果を設定
+	pMyBox->SetResult(bHit);
+
+	// 結果を設定
+	pTargetBox->SetResult(bHit);
+
+#endif // _DEBUG
 
 	//if (pos.x - m_Size.x * HALF_VALUE <= otherPos.x + otherSize.x * HALF_VALUE
 	//	&& pos.x + m_Size.x * HALF_VALUE >= otherPos.x - otherSize.x * HALF_VALUE)
@@ -257,7 +266,7 @@ bool CCollisionAABB::Collision(CCollider* pMyBox, CCollider* pTargetBox, D3DXVEC
 	//	}
 	//}
 
-	return false;
+	return bHit;
 }
 
 //================================================
@@ -325,13 +334,24 @@ bool CCollisionSphere::Collision(CCollider* myCollider, CCollider* otherCollider
 	// 半径を2乗する
 	fRadius = fRadius * fRadius;
 
+	bool bHit = false;
+
 	// 距離が半径以下だったら当たっている
 	if (fDistance <= fRadius)
 	{
-		return true;
+		bHit = true;
 	}
 
-	return false;
+#ifdef _DEBUG
+	// 結果を設定
+	myCollider->SetResult(bHit);
+
+	// 結果を設定
+	otherCollider->SetResult(bHit);
+
+#endif // _DEBUG
+
+	return bHit;
 }
 
 //================================================
@@ -661,8 +681,133 @@ float CCollisionCapsule::ClosestPtSegmentSegment(D3DXVECTOR3 Start1, D3DXVECTOR3
 }
 
 //================================================
-// デストラクタ
+// コンストラクタ
 //================================================
 CCollisionCapsule::~CCollisionCapsule()
 {
+}
+
+//================================================
+// コンストラクタ
+//================================================
+CCollisionOBB::CCollisionOBB() : CCollision(TYPE_OBB)
+{
+}
+
+//================================================
+// デストラクタ
+//================================================
+CCollisionOBB::~CCollisionOBB()
+{
+}
+
+//================================================
+// 当たり判定
+//================================================
+bool CCollisionOBB::Collision(CCollider* pOBB, CCollider* pAABB)
+{
+	// 自分の空間情報へのポインタの取得
+	CTransform* pOBBTransform = pOBB->GetTransform();
+
+	// 相手の空間情報へのポインタの取得
+	CTransform* pAABBTransform = pAABB->GetTransform();
+
+	// 自分の空間情報の取得
+	CTransform::Info ObbTransform = {};
+	CTransform::Info AABBTransform = {};
+
+	if (pOBBTransform != nullptr)
+	{
+		// 情報の取得
+		ObbTransform = pOBBTransform->GetInfo();
+	}
+
+	if (pAABBTransform != nullptr)
+	{
+		// 情報の取得
+		AABBTransform = pAABBTransform->GetInfo();
+	}
+
+	// OBBの逆行列
+	D3DXMATRIX mtxObbInverse;
+
+	// 逆行列の作成
+	D3DXMatrixInverse(&mtxObbInverse, nullptr, &ObbTransform.mtxWorld);
+
+	// 半分のサイズを求める
+	D3DXVECTOR3 aabbHalfSize = AABBTransform.Size * 0.5f;
+
+	D3DXVECTOR3 aabbCenterPos;
+
+	// 中心座標をOBB空間に変換
+	D3DXVec3TransformCoord(&aabbCenterPos, &AABBTransform.pos, &mtxObbInverse);
+
+	// 各軸の設定
+	D3DXVECTOR3 xAxis = { mtxObbInverse._11,mtxObbInverse._21,mtxObbInverse._31 };
+	D3DXVECTOR3 yAxis = { mtxObbInverse._12,mtxObbInverse._22,mtxObbInverse._32 };
+	D3DXVECTOR3 zAxis = { mtxObbInverse._13,mtxObbInverse._23,mtxObbInverse._33 };
+
+	D3DXVECTOR3 extents;
+
+	// OBBの世界座標系を使いaabbの作成
+	extents.x = fabsf(xAxis.x) * aabbHalfSize.x + fabsf(yAxis.x) * aabbHalfSize.y + fabsf(zAxis.x) * aabbHalfSize.z;
+	extents.y = fabsf(xAxis.y) * aabbHalfSize.x + fabsf(yAxis.y) * aabbHalfSize.y + fabsf(zAxis.y) * aabbHalfSize.z;
+	extents.z = fabsf(xAxis.z) * aabbHalfSize.x + fabsf(yAxis.z) * aabbHalfSize.y + fabsf(zAxis.z) * aabbHalfSize.z;
+
+	// OBBの半分の大きさ
+	D3DXVECTOR3 ObbHalfSize = ObbTransform.Size * 0.5f;
+
+#ifdef _DEBUG
+
+	pOBB->SetResult(false);
+	pAABB->SetResult(false);
+#endif // _DEBUG
+
+	if (fabsf(aabbCenterPos.x) > ObbHalfSize.x + extents.x) return false;
+	if (fabsf(aabbCenterPos.y) > ObbHalfSize.y + extents.y) return false;
+	if (fabsf(aabbCenterPos.z) > ObbHalfSize.z + extents.z) return false;
+
+	// 各軸の重なり量を求める
+	float fOverLapX = (ObbHalfSize.x + extents.x) - fabsf(aabbCenterPos.x);
+	float fOverLapY = (ObbHalfSize.y + extents.y) - fabsf(aabbCenterPos.y);
+	float fOverLapZ = (ObbHalfSize.z + extents.z) - fabsf(aabbCenterPos.z);
+
+	CDebugProc::Print("重なり = %.2f,%.2f,%.2f\n", fOverLapX, fOverLapY, fOverLapZ);
+
+	// 最小の重なり量
+	float fMinOverlap = fOverLapX;
+
+	float fDir = (aabbCenterPos.x < 0.0f ? -1.0f : 1.0f);
+
+	D3DXVECTOR3 pushDir = D3DXVECTOR3(fDir, 0.0f, 0.0f);
+
+	if (fOverLapY < fMinOverlap)
+	{
+		fMinOverlap = fOverLapY;
+		fDir = (aabbCenterPos.y < 0.0f ? -1.0f : 1.0f);
+		pushDir = D3DXVECTOR3(0.0f, fDir, 0.0f);
+	}
+
+	if (fOverLapZ < fMinOverlap)
+	{
+		fMinOverlap = fOverLapZ;
+		fDir = (aabbCenterPos.z < 0.0f ? -1.0f : 1.0f);
+		pushDir = D3DXVECTOR3(0.0f, 0.0f, fDir);
+	}
+
+	D3DXVECTOR3 pushVector = pushDir * fMinOverlap;
+	D3DXVECTOR3 pushVectorWorld;
+	D3DXVec3TransformNormal(&pushVectorWorld, &pushVector, &ObbTransform.mtxWorld);
+
+	AABBTransform.pos += pushVectorWorld;
+
+	pAABBTransform->SetInfo(AABBTransform);
+
+#ifdef _DEBUG
+
+	pOBB->SetResult(true);
+	pAABB->SetResult(true);
+#endif // _DEBUG
+
+	return true;
 }

@@ -33,6 +33,7 @@ public:
 		D3DXMATRIX mtxWorld;	// ワールドマトリックス
 		float fRadius;			// 半径
 	};
+
 	CTransform();
 	~CTransform();
 
@@ -40,7 +41,7 @@ public:
 	void UpdatePosition(const D3DXVECTOR3 move);
 	void SetMatrix(void);
 	Info GetInfo(void) const { return m_Info; }
-	void SetInfo(const Info info) { m_Info = info; }
+	void SetInfo(const Info& info) { m_Info = info; }
 
 private:
 	Info m_Info; // 情報

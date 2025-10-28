@@ -14,7 +14,6 @@
 #include"math.h"
 #include "debugproc.h"
 #include "manager.h"
-#include "CharacterManager.h"
 #include "character3D.h"
 
 using namespace std;	// –¼‘O‹óŠÔstd‚ğg—p

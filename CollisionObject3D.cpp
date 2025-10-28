@@ -15,7 +15,7 @@
 //================================================
 // コンストラクタ
 //================================================
-CCollisionObject3D::CCollisionObject3D()
+CCollisionObject3D::CCollisionObject3D(const int nPriority) : CObject(nPriority)
 {
 
 }
@@ -26,6 +26,36 @@ CCollisionObject3D::CCollisionObject3D()
 CCollisionObject3D::~CCollisionObject3D()
 {
 	
+}
+
+//================================================
+// 生成処理
+//================================================
+CCollisionObject3D* CCollisionObject3D::Create(std::unique_ptr<CTransform> pTransform, CCollider* pCollider, const char* pColliderTag)
+{
+	CCollisionObject3D* pInstance = new CCollisionObject3D;
+
+	if (pInstance->m_pTransform == nullptr)
+	{
+		// 空間情報の生成
+		pInstance->m_pTransform = std::move(pTransform);
+	}
+
+	if (pCollider != nullptr)
+	{
+		// コライダーの追加
+		pInstance->AddCollider(pCollider, pColliderTag);
+	}
+
+	// 初期化情報
+	if (FAILED(pInstance->Init()))
+	{
+		pInstance->Uninit();
+		pInstance = nullptr;
+		return nullptr;
+	}
+
+	return pInstance;
 }
 
 //================================================
@@ -105,12 +135,13 @@ void CCollisionObject3D::Draw(void)
 //================================================
 // コライダーの追加
 //================================================
-void CCollisionObject3D::AddCollider(CCollider* pCollider)
+void CCollisionObject3D::AddCollider(CCollider* pCollider, const char* ColliderTag)
 {
 	if (pCollider != nullptr)
 	{
 		// 空間情報の設定
 		pCollider->SetTransform(m_pTransform.get());
+		pCollider->SetTag(ColliderTag);
 	}
 	else
 	{

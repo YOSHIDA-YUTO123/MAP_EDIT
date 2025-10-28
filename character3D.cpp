@@ -16,91 +16,38 @@
 #include "model.h"
 #include "motion.h"
 #include <string>
-#include "CharacterManager.h"
-
-using namespace math;	// 名前空間mathを使用
-using namespace Const;	// 名前空間Constを使用
-using namespace std;	// 名前空間stdを使用
+#include <memory>
+#include "transform.h"
+#include "CollisionObject3D.h"
 
 //===================================================
 // コンストラクタ
 //===================================================
-CCharacter3D::CCharacter3D() : CObject(4)
+CCharacter3D::CCharacter3D() :
+	CObject(4),
+	m_pCollObject(nullptr),
+	m_nNumModel(NULL),
+	m_pMotion(nullptr),
+	m_nLife(NULL),
+	m_state(STATE::STATE_NORMAL),
+	m_fSpeed(NULL),
+	m_type(TYPE_NONE)
 {
-	m_bShow = true;
-	m_Size = VEC3_NULL;
-	m_nNumModel = NULL;
-	m_pMotion = nullptr;
-	m_pos = VEC3_NULL;
-	m_rot = VEC3_NULL;
-	memset(m_mtxWorld, NULL, sizeof(m_mtxWorld));
-	m_nLife = NULL;
-	m_state = STATE::STATE_NORMAL;
-	m_fSpeed = NULL;
-	m_nHitStopTime = NULL;
 }
 
 //===================================================
 // コンストラクタ
 //===================================================
-CCharacter3D::CCharacter3D(const TYPE type) : CObject(4)
+CCharacter3D::CCharacter3D(const TYPE type)
+	: CObject(4),
+	m_pCollObject(nullptr),
+	m_nNumModel(NULL),
+	m_pMotion(nullptr),
+	m_nLife(NULL),
+	m_state(STATE::STATE_NORMAL),
+	m_fSpeed(NULL),
+	m_type(type)
 {
-	m_bShow = true;
-	m_type = type;
-	m_Size = VEC3_NULL;
-	m_nNumModel = NULL;
-	m_pMotion = nullptr;
-	m_pos = VEC3_NULL;
-	m_rot = VEC3_NULL;
-	memset(m_mtxWorld, NULL, sizeof(m_mtxWorld));
-	m_nLife = NULL;
-	m_state = STATE::STATE_NORMAL;
-	m_fSpeed = NULL;
-	m_nHitStopTime = NULL;
-}
-
-//===================================================
-// コピーコンストラクタ
-//===================================================
-CCharacter3D::CCharacter3D(const CCharacter3D& other)
-{
-	if (other.m_pMotion != nullptr)
-	{
-		m_pMotion = std::make_unique<CMotion>(*other.m_pMotion);
-	}
-	else
-	{
-		m_pMotion = nullptr;
-	}
-
-	// モデルの要素のクリア
-	m_apModel.clear();
-
-	// モデルの配列の確保
-	m_apModel.reserve(other.m_apModel.size());
-
-	for (auto* pModel : other.m_apModel)
-	{
-		if (pModel != nullptr)
-		{
-			m_apModel.push_back(new CModel(*pModel));
-		}
-		else
-		{
-			m_apModel.push_back(nullptr);
-		}
-	}
-
-	m_Size = other.m_Size;
-	m_nNumModel = other.m_nNumModel;
-	m_pos = VEC3_NULL;
-	m_rot = VEC3_NULL;
-	memset(m_mtxWorld, NULL, sizeof(m_mtxWorld));
-	m_nLife = other.m_nLife;
-	m_state = STATE::STATE_NORMAL;
-	m_fSpeed = other.m_fSpeed;
-	m_nHitStopTime = NULL;
-	m_bShow = true;
 }
 
 //===================================================
@@ -115,6 +62,16 @@ CCharacter3D::~CCharacter3D()
 //===================================================
 HRESULT CCharacter3D::Init(void)
 {
+	if (m_pCollObject == nullptr)
+	{
+		m_pCollObject = CCollisionObject3D::Create(std::make_unique<CTransform>());
+	}
+
+	// 初期化処理
+	if (FAILED(m_pCollObject->Init()))
+	{
+		return E_FAIL;
+	}
 	return S_OK;
 }
 
@@ -123,17 +80,18 @@ HRESULT CCharacter3D::Init(void)
 //===================================================
 void CCharacter3D::Uninit(void)
 {
-	for (int nCnt = 0; nCnt < (int)m_apModel.size(); nCnt++)
+	// 要素数分調べる
+	for (auto &model : m_apModel)
 	{
 		// モデルの破棄
-		if (m_apModel[nCnt] != nullptr)
+		if (model != nullptr)
 		{
 			// 終了処理
-			m_apModel[nCnt]->Uninit();
+			model->Uninit();
 
-			delete m_apModel[nCnt];
+			delete model;
 
-			m_apModel[nCnt] = nullptr;
+			model = nullptr;
 		}
 	}
 
@@ -143,7 +101,9 @@ void CCharacter3D::Uninit(void)
 		m_pMotion->Uninit();
 	}
 
-	// 自分自身の破棄
+	m_pCollObject = nullptr;
+
+	// 終了処理
 	CObject::Release();
 }
 
@@ -152,9 +112,6 @@ void CCharacter3D::Uninit(void)
 //===================================================
 void CCharacter3D::Update(void)
 {
-	// 種類が無いなら処理しない
-	if (m_bShow == false) return;
-
 	// 状態の遷移
 	switch (m_state)
 	{
@@ -198,48 +155,21 @@ void CCharacter3D::Update(void)
 //===================================================
 void CCharacter3D::Draw(void)
 {
-	// 種類が無いなら処理しない
-	if (m_bShow == false) return;
-
-	// デバイスの取得
-	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
-
-	//計算用のマトリックス
-	D3DXMATRIX mtxRot, mtxTrans, mtxScal;
-
-	//ワールドマトリックスの初期化
-	D3DXMatrixIdentity(&m_mtxWorld);
-
-	//向きを反映
-	D3DXMatrixRotationYawPitchRoll(&mtxRot, m_rot.y, m_rot.x, m_rot.z);
-	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxRot);
-
-	//位置を反映
-	D3DXMatrixTranslation(&mtxTrans, m_pos.x, m_pos.y, m_pos.z);
-	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxTrans);
-
-	//ワールドマトリックスの設定
-	pDevice->SetTransform(D3DTS_WORLD, &m_mtxWorld);
+	if (m_pCollObject != nullptr)
+	{
+		// 描画処理
+		m_pCollObject->Draw();
+	}
 
 	// モデルの描画
-	for (int nCnt = 0; nCnt < m_nNumModel; nCnt++)
+	for (auto &model : m_apModel)
 	{
-		if (m_apModel[nCnt] != nullptr)
+		if (model != nullptr)
 		{
 			// 描画処理
-			m_apModel[nCnt]->Draw();
+			model->Draw();
 		}
 	}
-}
-
-//===================================================
-// クローンの生成処理
-//===================================================
-CCharacter3D* CCharacter3D::Clone(void) const
-{
-	auto clone = new CCharacter3D(*this);
-
-	return clone;
 }
 
 //===================================================
@@ -247,25 +177,11 @@ CCharacter3D* CCharacter3D::Clone(void) const
 //===================================================
 void CCharacter3D::Draw(const float fAvl)
 {
-	// デバイスの取得
-	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
-
-	//計算用のマトリックス
-	D3DXMATRIX mtxRot, mtxTrans, mtxScal;
-
-	//ワールドマトリックスの初期化
-	D3DXMatrixIdentity(&m_mtxWorld);
-
-	//向きを反映
-	D3DXMatrixRotationYawPitchRoll(&mtxRot, m_rot.y, m_rot.x, m_rot.z);
-	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxRot);
-
-	//位置を反映
-	D3DXMatrixTranslation(&mtxTrans, m_pos.x, m_pos.y, m_pos.z);
-	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxTrans);
-
-	//ワールドマトリックスの設定
-	pDevice->SetTransform(D3DTS_WORLD, &m_mtxWorld);
+	if (m_pCollObject != nullptr)
+	{
+		// 描画処理
+		m_pCollObject->Draw();
+	}
 
 	// モデルの描画
 	for (int nCnt = 0; nCnt < m_nNumModel; nCnt++)
@@ -283,25 +199,11 @@ void CCharacter3D::Draw(const float fAvl)
 //===================================================
 void CCharacter3D::DrawMT(void)
 {
-	// デバイスの取得
-	LPDIRECT3DDEVICE9 pDevice = CManager::GetRenderer()->GetDevice();
-
-	//計算用のマトリックス
-	D3DXMATRIX mtxRot, mtxTrans, mtxScal;
-
-	//ワールドマトリックスの初期化
-	D3DXMatrixIdentity(&m_mtxWorld);
-
-	//向きを反映
-	D3DXMatrixRotationYawPitchRoll(&mtxRot, m_rot.y, m_rot.x, m_rot.z);
-	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxRot);
-
-	//位置を反映
-	D3DXMatrixTranslation(&mtxTrans, m_pos.x, m_pos.y, m_pos.z);
-	D3DXMatrixMultiply(&m_mtxWorld, &m_mtxWorld, &mtxTrans);
-
-	//ワールドマトリックスの設定
-	pDevice->SetTransform(D3DTS_WORLD, &m_mtxWorld);
+	if (m_pCollObject != nullptr)
+	{
+		// 描画処理
+		m_pCollObject->Draw();
+	}
 
 	// モデルの描画
 	for (int nCnt = 0; nCnt < m_nNumModel; nCnt++)
@@ -340,7 +242,7 @@ D3DXVECTOR3 CCharacter3D::GetModelPos(const int nIdx)
 	D3DXMATRIX mtx = m_apModel[nIdx]->GetMatrixWorld();
 
 	// ワールドマトリックスの位置の取得
-	D3DXVECTOR3 modelPos = GetPositionFromMatrix(mtx);
+	D3DXVECTOR3 modelPos = math::GetPositionFromMatrix(mtx);
 
 	return modelPos;
 }
@@ -351,7 +253,7 @@ D3DXVECTOR3 CCharacter3D::GetModelPos(const int nIdx)
 D3DXVECTOR3 CCharacter3D::GetModelRot(const int nIdx)
 {
 	// モデルの位置の取得
-	D3DXVECTOR3 modelRot = m_apModel[nIdx]->GetRotaition();
+	D3DXVECTOR3 modelRot = m_apModel[nIdx]->GetRotation();
 
 	return modelRot;
 }
@@ -374,7 +276,23 @@ void CCharacter3D::SetCharacter(const int nLife, const float fSpeed, const D3DXV
 {
 	m_nLife = nLife;
 	m_fSpeed = fSpeed;
-	m_Size = Size;
+
+	// nullだったら処理しない
+	if (m_pCollObject == nullptr) return;
+
+	// 空間情報の取得
+	CTransform* pTransform = m_pCollObject->GetTransform();
+
+	if (pTransform != nullptr)
+	{
+		// 情報の取得
+		CTransform::Info info = pTransform->GetInfo();
+
+		info.Size = Size;
+
+		// 情報の設定
+		pTransform->SetInfo(info);
+	}
 }
 
 //===================================================
@@ -405,37 +323,6 @@ bool CCharacter3D::Hit(int nDamage)
 		return false;
 	}
 
-	return true;
-}
-
-//===================================================
-// 生きているかどうか
-//===================================================
-bool CCharacter3D::GetAlive(void)
-{
-	// 死んでいるなら
-	if (m_nLife <= 0)
-	{
-		return false;
-	}
-
-	return true;
-}
-
-//===================================================
-// ヒットストップの設定処理
-//===================================================
-bool CCharacter3D::HitStop(void)
-{
-	// カウンターを減らす
-	m_nHitStopTime--;
-
-	// 0以下だったら
-	if (m_nHitStopTime <= 0)
-	{
-		// ヒットストップしていない
-		return false;
-	}
 	return true;
 }
 

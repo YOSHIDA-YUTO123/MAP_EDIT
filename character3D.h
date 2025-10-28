@@ -27,6 +27,7 @@ class CShadowS;
 class CRotation;
 class CMotion;
 class CModel;
+class CCollisionObject3D;
 
 //***************************************************
 // キャラクター3Dクラスの定義
@@ -56,65 +57,53 @@ public:
 
 	CCharacter3D();
 	CCharacter3D(const TYPE type);
-	CCharacter3D(const CCharacter3D& other);
-
 	virtual ~CCharacter3D();
+
+	static CCharacter3D* Create(void) { return new CCharacter3D; }
 
 	virtual HRESULT Init(void) override;
 	virtual void Uninit(void) override;
 	virtual void Update(void) override;
 	virtual void Draw(void) override;
-	virtual CCharacter3D* Clone(void) const;
-	void SetOffShow(void) { m_bShow = false; }
 
+	/// <summary>
+	/// クローンの作成処理
+	/// </summary>
+	/// <returns>キャラクターのポインタ</returns>
 	void Draw(const float fAvl);
 	void DrawMT(void);
 	
-	TYPE GetType(void) const { return m_type; }
-	CMotion* LoadMotion(const char *pFileName, const int nNumMotion);
+	void SetCharacter(const int nLife, const float fSpeed, const D3DXVECTOR3 Size);
+	void SetModelMT(const char* pTextureName);
 
-	// ゲッター
-	D3DXVECTOR3 GetPosition(void) const { return m_pos; }
-	D3DXVECTOR3 GetSize(void) const { return m_Size; }
-	D3DXVECTOR3 GetRotaition(void) const { return m_rot; }
+	void SetState(const STATE state,const int nTime);
+	bool Hit(int nDamage);		// ヒット時の処理
+	void UpdateMotion(void);
+
+	CCollisionObject3D* GetCollisionObject(void) { return m_pCollObject; }
+
+	TYPE GetType(void) const { return m_type; }
+	CMotion* LoadMotion(const char* pFileName, const int nNumMotion);
 
 	STATE GetState(void) { return m_state; }
 	CMotion* GetMotion(void) { return m_pMotion.get(); } // モーションの取得
 	float GetSpeed(void) { return m_fSpeed; }
 	int GetLife(void) const { return m_nLife; }
+	void SetType(const TYPE type) { m_type = type; }
+
 	D3DXVECTOR3 GetModelPos(const int nIdx);
 	D3DXVECTOR3 GetModelRot(const int nIdx);
 	D3DXVECTOR3 GetModelSize(const int nIdx);
 
-	// セッター
-	void SetPosition(const D3DXVECTOR3 pos) { m_pos = pos; }
-	void SetRotaition(const D3DXVECTOR3 rot) { m_rot = rot; }
-
-	void SetCharacter(const int nLife, const float fSpeed, const D3DXVECTOR3 Size);
-	void SetModelMT(const char* pTextureName);
-
-	bool GetAlive(void);		// 生きているか
-
-	void SetState(const STATE state,const int nTime);
-	bool Hit(int nDamage);		// ヒット時の処理
-	bool HitStop(void);			// ヒットストップしてるかどうか
-	void SetHitStop(const int nTime) { m_nHitStopTime = nTime; } // ヒットストップの設定
-	void UpdateMotion(void);
-
 private:
+	CCollisionObject3D* m_pCollObject;		// 当たり判定するオブジェクト
 	std::unique_ptr<CMotion> m_pMotion;		// モーションのクラスへのポインタ
 	std::vector<CModel*> m_apModel;			// モデルクラスのポインタ
 	STATE m_state;							// 状態
 	TYPE m_type;							// 種類
-	D3DXVECTOR3 m_pos;						// 位置
-	D3DXVECTOR3 m_rot;						// 向き
-	D3DXVECTOR3 m_Size;						// 大きさ
-	D3DXMATRIX m_mtxWorld;					// ワールドマトリックス
 	float m_fSpeed;							// 足の速さ
 	int m_nNumModel;						// モデルの最大数
 	int m_nCounterState;					// 状態のカウンター
 	int m_nLife;							// 寿命
-	int m_nHitStopTime;						// ヒットストップの時間
-	bool m_bShow;							// 描画するかどうか
 };
 #endif

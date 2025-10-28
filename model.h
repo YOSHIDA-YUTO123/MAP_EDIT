@@ -38,7 +38,7 @@ public:
 	bool CollisionMouse(void);
 
 	D3DXVECTOR3 GetPosition(void) const { return m_pos; }
-	D3DXVECTOR3 GetRotaition(void) const { return m_rot; }
+	D3DXVECTOR3 GetRotation(void) const { return m_rot; }
 	D3DXVECTOR3 GetOffPos(void) const { return m_offpos; }
 	D3DXVECTOR3 GetOffRot(void) const { return m_offrot; }
 

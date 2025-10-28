@@ -103,6 +103,8 @@ HRESULT CMapObjectManager::Init(void)
 	// アイコンの生成
 	CIconModel::Create();
 
+	LoadFileName();
+
 	return S_OK;
 }
 
@@ -190,6 +192,8 @@ void CMapObjectManager::Update(void)
 		}
 	}
 	
+	SetLoadFile();
+
 	if (ImGui::Button(u8"セーブする", ImVec2(300.0, 0)))
 	{
 		int nID = MessageBox(NULL, "配置情報のセーブ", "セーブしますか ?", MB_YESNO);
@@ -562,7 +566,7 @@ void CMapObjectManager::Save(void)
 	}
 
 	// ファイルを開く
-	std::ofstream file(JSON_FILE);
+	std::ofstream file(m_aLoadFileName);
 
 	// ファイルが開けたら
 	if (file.is_open())
@@ -575,7 +579,7 @@ void CMapObjectManager::Save(void)
 	}
 	else
 	{
-		MessageBox(NULL, "エラー", "ファイルが開けませんでした", MB_OK);
+		MessageBox(NULL, "ファイルが開けませんでした", m_aLoadFileName.c_str(), MB_OK);
 	}
 }
 
@@ -587,7 +591,7 @@ void CMapObjectManager::Load(void)
 	json config;
 
 	// ファイルを開く
-	std::ifstream file(JSON_FILE);
+	std::ifstream file(m_aLoadFileName);
 
 	if (file.is_open())
 	{
@@ -597,7 +601,7 @@ void CMapObjectManager::Load(void)
 	}
 	else
 	{
-		MessageBox(NULL, "エラー", "ファイルが開けませんでした", MB_OK);
+		MessageBox(NULL, "ファイルが開けませんでした", m_aLoadFileName.c_str(), MB_OK);
 		return;
 	}
 
@@ -652,13 +656,16 @@ void CMapObjectManager::Erase(CMapObject* pObj)
 //===================================================
 void CMapObjectManager::SetFilePath(void)
 {
-	// モデルのマネージャーの取得
-	CModelManager* pModelManager = CManager::GetModel();
+	// マップオブジェクトのマネージャークラスの取得
+	CMapObjectList* pMapObjectList = CManager::GetMapObjectList();
 
 	// 取得できなかったら処理しない
-	if (pModelManager == nullptr) return;
+	if (pMapObjectList == nullptr) return;
 	
-	for (auto& modellist : pModelManager->GetList())
+	// 登録処理
+	pMapObjectList->Register();
+
+	for (auto& modellist : pMapObjectList->GetList())
 	{
 		// すでにリストに登録されているか調べる
 		auto it = std::find(m_aModelPath.begin(), m_aModelPath.end(), modellist.filepath);
@@ -795,6 +802,58 @@ void CMapObjectManager::CopyAndPaste(CInputKeyboard *pKeyboard)
 	if (pKeyboard->GetPress(DIK_LCONTROL) && pKeyboard->GetTrigger(DIK_C))
 	{
 		m_pCopyObj = m_pSelect;
+	}
+}
+
+//===================================================
+// ファイル名のロード
+//===================================================
+void CMapObjectManager::LoadFileName(void)
+{
+	std::fstream file("data/system.ini");
+	std::string line;
+
+	std::string stageFile;
+
+	if (file.is_open())
+	{
+		// ファイルを一行づつ読み取る
+		while (std::getline(file, line))
+		{
+			if (line.find("STAGE_JSONFILE") != std::string::npos)
+			{
+				// = の位置を求める
+				size_t pos = line.find('=');
+
+				stageFile = line.substr(pos + 1);
+
+				stageFile.erase(0, stageFile.find_first_not_of(" \t\"")); // 前の空白の除去
+				stageFile.erase(stageFile.find_last_not_of(" \t\"") + 1); // 後ろの空白の除去
+			}
+		}
+
+		file.clear();
+		file.close();
+	}
+
+	m_aLoadFileName = stageFile;
+}
+
+//===================================================
+// 読み込むファイルの設定
+//===================================================
+void CMapObjectManager::SetLoadFile(void)
+{
+	// 文字列
+	static char pModelName[MAX_WORD] = {};
+
+	ImGui::Text(u8"現在のファイル名 [ %s ]", m_aLoadFileName.c_str());
+
+	ImGui::SetNextItemWidth(200); // 入力欄の幅を指定
+
+	if (ImGui::InputText(u8"ファイル設定", pModelName, sizeof(pModelName), ImGuiInputTextFlags_EnterReturnsTrue))
+	{
+		m_aLoadFileName = pModelName;
 	}
 }
 

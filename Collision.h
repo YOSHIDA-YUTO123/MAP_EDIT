@@ -30,27 +30,27 @@ class CCollision
 {
 public:
 
+	// 判定の種類
 	typedef enum
 	{
-		TYPE_AABB = 0,
-		TYPE_SPHERE,
-		TYPE_FOV,
-		TYPE_CAPSULE,
+		TYPE_BASE = 0,	// 基底クラス
+		TYPE_AABB,		// 矩形
+		TYPE_SPHERE,	// 球
+		TYPE_FOV,		// 視界
+		TYPE_CAPSULE,	// カプセル
+		TYPE_OBB,		// 回転矩形
 		TYPE_MAX
 	}TYPE;
 
 	CCollision(TYPE type);
 	virtual ~CCollision();
 
-	static CCollision* Create(const D3DXVECTOR3 pos,const TYPE type);
+	static CCollision* Create(const TYPE type);
 
-	void SetPos(const D3DXVECTOR3 pos) { m_pos = pos; }
-
-	D3DXVECTOR3 GetPosition(void) const { return m_pos; }
 	TYPE GetType(void) const { return m_type; }
+
 private:
-	D3DXVECTOR3 m_pos; // 位置
-	TYPE m_type;	   // 当たり判定の種類
+	TYPE m_type;		// 当たり判定の種類
 };
 
 //************************************************
@@ -130,6 +130,20 @@ public:
 private:
 	CCollisionCapsule();
 	static float ClosestPtSegmentSegment(D3DXVECTOR3 Start1, D3DXVECTOR3 End1, D3DXVECTOR3 Start2, D3DXVECTOR3 End2, float* pParam1, float* pParam2, D3DXVECTOR3* c1osestPos1, D3DXVECTOR3* c1osestPos2);
+};
+
+//************************************************
+// 当たり判定(円)クラス
+//************************************************
+class CCollisionOBB : public CCollision
+{
+public:
+	~CCollisionOBB();
+
+	static bool Collision(CCollider* pOBB, CCollider* pAABB);
+
+private:
+	CCollisionOBB();
 };
 
 #endif

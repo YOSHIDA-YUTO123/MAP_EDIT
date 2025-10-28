@@ -21,6 +21,7 @@
 #include "meshfield.h"
 #include "transform.h"
 #include "MapObjectList.h"
+#include "Collider.h"
 
 //***************************************************
 // 定数宣言
@@ -111,6 +112,24 @@ HRESULT CMapObject::Init(void)
 		return E_FAIL;
 	}
 
+	// モデルマネージャークラスの取得
+	CModelManager* pModelManager = CManager::GetModel();
+
+	// モデルの情報の取得
+	CModelManager::ModelInfo modelInfo = pModelManager->GetModelInfo(m_nModelIdx);
+
+	// 空間情報の取得
+	CTransform *pTransform = CCollisionObject3D::GetTransform();
+
+	CTransform::Info transform = pTransform->GetInfo();
+
+	transform.Size = modelInfo.Size;
+
+	pTransform->SetInfo(transform);
+
+	// コライダーの追加
+	CCollisionObject3D::AddCollider(CColliderOBB::Create(), "mapObject");
+
 	return S_OK;
 }
 
@@ -153,6 +172,16 @@ void CMapObject::Update(void)
 	{
 		info.pos.y = fHeight;
 	}
+
+	if (m_nModelIdx == -1) return;
+
+	// モデルマネージャークラスの取得
+	CModelManager* pModelManager = CManager::GetModel();
+
+	// モデルの情報の取得
+	CModelManager::ModelInfo modelInfo = pModelManager->GetModelInfo(m_nModelIdx);
+
+	info.Size = modelInfo.Size;
 
 	// 空間情報の設定
 	pTransform->SetInfo(info);
@@ -260,14 +289,14 @@ void CMapObject::UpdateMove(void)
 	// カメラの角度の取得
 	float fCameraAngle = pCamera->GetRotaition().y;
 
-	if (pKeyboard->GetPress(DIK_A))
+	if (pKeyboard->GetPress(DIK_LEFT))
 	{
-		if (pKeyboard->GetPress(DIK_W))
+		if (pKeyboard->GetPress(DIK_UP))
 		{
 			info.pos.x += sinf(fCameraAngle - D3DX_PI * 0.25f) * m_fMove;
 			info.pos.z += cosf(fCameraAngle - D3DX_PI * 0.25f) * m_fMove;
 		}
-		else if (pKeyboard->GetPress(DIK_S))
+		else if (pKeyboard->GetPress(DIK_DOWN))
 		{
 			info.pos.x += sinf(fCameraAngle - D3DX_PI * 0.75f) * m_fMove;
 			info.pos.z += cosf(fCameraAngle - D3DX_PI * 0.75f) * m_fMove;
@@ -278,14 +307,14 @@ void CMapObject::UpdateMove(void)
 			info.pos.z += cosf(fCameraAngle - D3DX_PI * 0.5f) * m_fMove;
 		}
 	}
-	else if (pKeyboard->GetPress(DIK_D))
+	else if (pKeyboard->GetPress(DIK_RIGHT))
 	{
-		if (pKeyboard->GetPress(DIK_W))
+		if (pKeyboard->GetPress(DIK_UP))
 		{
 			info.pos.x += sinf(fCameraAngle + D3DX_PI * 0.25f) * m_fMove;
 			info.pos.z += cosf(fCameraAngle + D3DX_PI * 0.25f) * m_fMove;
 		}
-		else if (pKeyboard->GetPress(DIK_S))
+		else if (pKeyboard->GetPress(DIK_DOWN))
 		{
 			info.pos.x += sinf(fCameraAngle + D3DX_PI * 0.75f) * m_fMove;
 			info.pos.z += cosf(fCameraAngle + D3DX_PI * 0.75f) * m_fMove;
@@ -296,12 +325,12 @@ void CMapObject::UpdateMove(void)
 			info.pos.z += cosf(fCameraAngle + D3DX_PI * 0.5f) * m_fMove;
 		}
 	}
-	else if (pKeyboard->GetPress(DIK_W))
+	else if (pKeyboard->GetPress(DIK_UP))
 	{
 		info.pos.x += sinf(fCameraAngle) * m_fMove;
 		info.pos.z += cosf(fCameraAngle) * m_fMove;
 	}
-	else if (pKeyboard->GetPress(DIK_S))
+	else if (pKeyboard->GetPress(DIK_DOWN))
 	{
 		info.pos.x += sinf(fCameraAngle + D3DX_PI) * m_fMove;
 		info.pos.z += cosf(fCameraAngle + D3DX_PI) * m_fMove;

@@ -18,6 +18,7 @@
 #include "light.h"
 #include "debugproc.h"
 #include "TextureMTManager.h"
+#include "ViewAxis.h"
 
 //***************************************************
 // 名前空間
@@ -221,6 +222,8 @@ void CRenderer::Draw(const int fps)
 
 		// すべてのオブジェクトの描画処理
 		CObject::DrawAll();
+
+		CViewAxis::Draw();
 
 		// ImGuiの描画終了
 		m_pImGui->EndRenderer();		

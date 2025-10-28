@@ -15,6 +15,7 @@
 // インクルードファイル
 //************************************************
 #include "object.h"
+#include <vector>
 #include <memory>
 
 //************************************************
@@ -29,8 +30,17 @@ class CTransform;
 class CCollisionObject3D : public CObject
 {
 public:
-	CCollisionObject3D();
+	CCollisionObject3D(const int nPriority = 0);
 	virtual ~CCollisionObject3D();
+
+	/// <summary>
+	/// 生成処理
+	/// </summary>
+	/// <param name="空間情報"></param>
+	/// <param name="コライダー"></param>
+	/// <param name="コライダーのタグ"></param>
+	/// <returns>自分のインスタンス</returns>
+	static CCollisionObject3D* Create(std::unique_ptr<CTransform> pTransform, CCollider* pCollider = nullptr, const char* pColliderTag = nullptr);
 
 	virtual HRESULT Init(void) override;
 	virtual void Uninit(void) override;
@@ -42,7 +52,7 @@ public:
 	/// コライダーの追加
 	/// </summary>
 	/// <param name="生成したコライダー"></param>
-	void AddCollider(CCollider* pCollider);
+	void AddCollider(CCollider* pCollider,const char *ColliderTag);
 	std::vector<CCollider*>& GetCollider(void) { return m_pCollider; }
 
 private:

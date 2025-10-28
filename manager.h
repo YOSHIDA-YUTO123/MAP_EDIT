@@ -15,7 +15,8 @@
 // インクルードファイル
 //***************************************************
 #include "main.h"
-#include<memory>
+#include <memory>
+#include <vector>
 
 //***************************************************
 // 前方宣言
@@ -34,6 +35,7 @@ class CCamera;
 class CDebugLog;
 class CMeshField;
 class CMapObjectList;
+class CSystemBase;
 
 //***************************************************
 // マネージャークラスの定義
@@ -64,7 +66,10 @@ public:
 	static CTextureMTManager* GetTextureMT(void) { return m_pTexutreMTManager; }
 	static CMeshField* GetMeshField(void) { return m_pMeshField; }
 	static CMapObjectList* GetMapObjectList(void) { return m_pMapObjectList.get(); }
+	static void AddSystem(std::unique_ptr<CSystemBase> pSystem);
 private:
+	void Load(void);
+
 	static CRenderer* m_pRenderer;					// レンダラーのポインタ
 	static CInputKeyboard* m_pInputKeyboard;		// キーボードのポインタ
 	static CInputJoypad* m_pInputJoypad;			// パッドのポインタ
@@ -80,6 +85,7 @@ private:
 	static std::unique_ptr<CMapObjectList> m_pMapObjectList; // マップのオブジェクトのリスト
 	static int m_nFrameCounter;						// フレームカウンター
 	static bool m_bShowDebug;						// デバッグ表示をするかしないか
+	static std::vector<std::unique_ptr<CSystemBase>> m_pSystem;
 	int m_fps;										// fps格納用変数
 };
 #endif

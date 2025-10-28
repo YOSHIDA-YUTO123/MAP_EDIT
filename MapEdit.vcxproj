@@ -154,10 +154,11 @@
     <ClCompile Include="billboardAnim.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="character3D.cpp" />
-    <ClCompile Include="CharacterManager.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="Collision.cpp" />
     <ClCompile Include="CollisionObject3D.cpp" />
+    <ClCompile Include="CollisionPlayerToMapObject.cpp" />
+    <ClCompile Include="CollisionSystem.cpp" />
     <ClCompile Include="cylinder.cpp" />
     <ClCompile Include="DebugLog.cpp" />
     <ClCompile Include="debugproc.cpp" />
@@ -176,6 +177,7 @@
     <ClCompile Include="impact.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="light.cpp" />
+    <ClCompile Include="line.cpp" />
     <ClCompile Include="LoadManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="manager.cpp" />
@@ -209,19 +211,22 @@
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="sound.cpp" />
     <ClCompile Include="statebase.cpp" />
+    <ClCompile Include="SystemBase.cpp" />
     <ClCompile Include="textureManager.cpp" />
     <ClCompile Include="TextureMTManager.cpp" />
     <ClCompile Include="transform.cpp" />
+    <ClCompile Include="ViewAxis.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="billboard.h" />
     <ClInclude Include="billboardAnim.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="character3D.h" />
-    <ClInclude Include="CharacterManager.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Collision.h" />
     <ClInclude Include="CollisionObject3D.h" />
+    <ClInclude Include="CollisionPlayerToMapObject.h" />
+    <ClInclude Include="CollisionSystem.h" />
     <ClInclude Include="cylinder.h" />
     <ClInclude Include="DebugLog.h" />
     <ClInclude Include="debugproc.h" />
@@ -242,6 +247,7 @@
     <ClInclude Include="input.h" />
     <ClInclude Include="json.hpp" />
     <ClInclude Include="light.h" />
+    <ClInclude Include="line.h" />
     <ClInclude Include="LoadManager.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="manager.h" />
@@ -271,9 +277,11 @@
     <ClInclude Include="renderer.h" />
     <ClInclude Include="sound.h" />
     <ClInclude Include="statebase.h" />
+    <ClInclude Include="SystemBase.h" />
     <ClInclude Include="textureManager.h" />
     <ClInclude Include="TextureMTManager.h" />
     <ClInclude Include="transform.h" />
+    <ClInclude Include="ViewAxis.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="imgui.ini" />

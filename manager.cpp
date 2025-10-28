@@ -22,7 +22,6 @@
 #include "light.h"
 #include "object.h"
 #include "pause.h"
-#include "CharacterManager.h"
 #include "meshfield.h"
 #include "MapObjectManager.h"
 #include "imguimaneger.h"
@@ -32,6 +31,10 @@
 #include "TextureMTManager.h"
 #include "edit.h"
 #include "MapObjectList.h"
+#include "player.h"
+#include "SystemBase.h"
+#include "CollisionPlayerToMapObject.h"
+#include <fstream>
 
 using namespace Const;			// 名前空間Constを使用する
 using namespace std;			// 名前空間stdを使用する
@@ -54,6 +57,7 @@ CDebugLog* CManager::m_pDebugLog = nullptr;				// デバッグログのクラスへのポイン
 CTextureMTManager* CManager::m_pTexutreMTManager = nullptr; // テクスチャMTのクラスへのポインタ
 CMeshField* CManager::m_pMeshField = nullptr;				// メッシュフィールドへのポインタ
 std::unique_ptr<CMapObjectList> CManager::m_pMapObjectList = nullptr; // マップのオブジェクトのリスト
+std::vector<std::unique_ptr<CSystemBase>> CManager::m_pSystem = {};
 
 //===================================================
 // コンストラクタ
@@ -132,7 +136,8 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 	m_pLight = new CLight;
 	m_pLight->Init();
 	//m_pLight->SetPoint(D3DXVECTOR3(0.0f, 500.0f, 0.0f), 1000.0f, Const::WHITE, Const::WHITE);
-	m_pLight->SetDirectional(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(0.0f, -1.0f, 0.0f), D3DXVECTOR3(0.0f, 100.0f, 0.0f));
+	m_pLight->SetDirectional(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(0.0f, -1.0f, 0.25f), D3DXVECTOR3(0.0f, 100.0f, 0.0f));
+	m_pLight->SetDirectional(D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), D3DXVECTOR3(25.0f, -1.0f, 0.5f), D3DXVECTOR3(0.0f, 100.0f, 0.0f));
 
 	CEdit::Create();
 
@@ -144,8 +149,7 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 
 	CMeshDome::Create(VEC3_NULL, 8, 8, 10000.0f, 5000.0f);
 
-	// キャラクターマネージャーの生成
-	CCharacterManager::Create();
+	Load();
 
 	// 結果を返す
 	return S_OK;
@@ -155,6 +159,11 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 //===================================================
 void CManager::Uninit(void)
 {
+	for (auto& system : m_pSystem)
+	{
+		system.reset();
+	}
+
 	// テクスチャMTの破棄
 	if (m_pTexutreMTManager != nullptr)
 	{
@@ -284,6 +293,12 @@ void CManager::Update(void)
 	if (pImgui != nullptr)
 	{
 		pImgui->NewFrame();
+	}
+
+	for (auto& system : m_pSystem)
+	{
+		// 更新処理
+		system->Update();
 	}
 
 	if (m_pRenderer != nullptr)
@@ -467,4 +482,51 @@ CModelManager* CManager::GetModel(void)
 	if (m_pModel == nullptr) return nullptr;
 
 	return m_pModel;
+}
+
+//===================================================
+// systemの追加
+//===================================================
+void CManager::AddSystem(std::unique_ptr<CSystemBase> pSystem)
+{
+	m_pSystem.push_back(std::move(pSystem));
+}
+
+//===================================================
+// プレイヤーのロード
+//===================================================
+void CManager::Load(void)
+{
+	std::fstream file("data/system.ini");
+	std::string line;
+
+	std::string motionTxt;
+
+	if (file.is_open())
+	{
+		// ファイルを一行づつ読み取る
+		while (std::getline(file,line))
+		{
+			if (line.find("MOTION_TXT") != std::string::npos)
+			{
+				// = の位置を求める
+				size_t pos = line.find('=');
+
+				motionTxt = line.substr(pos + 1);
+
+				motionTxt.erase(0, motionTxt.find_first_not_of(" \t\"")); // 前の空白の除去
+				motionTxt.erase(motionTxt.find_last_not_of(" \t\"") + 1); // 後ろの空白の除去
+			}
+		}
+
+		file.clear();
+		file.close();
+	}
+	// プレイヤーのコライダー
+	auto pPlayer = CPlayer::Create({ 0.0f,0.0f,0.0f }, { 0.0f,0.0f,0.0f }, motionTxt.c_str(), CPlayer::MOTIONTYPE_MAX);
+
+	auto pPlayerToMapObject = std::make_unique<CCollisionPlayerToMapObject>();
+	pPlayerToMapObject->SetTarget(pPlayer);
+
+	AddSystem(std::move(pPlayerToMapObject));
 }

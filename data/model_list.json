@@ -38,6 +38,9 @@
         },
         {
             "file_name": "data/MODEL/MapObjectFile/02_armR.x"
+        },
+        {
+            "file_name": "data/MODEL/MapObjectFile/test00.x"
         }
     ]
 }

@@ -36,7 +36,7 @@ void CMapObjectList::AddList(CModelManager::ModelInfo modelInfo)
 	for (auto& list : m_pMapObjectList)
 	{
 		// ìoò^çœÇ›ÇæÇ¡ÇΩÇÁ
-		if (list.filepath == modelInfo.filepath)
+		if (strcmp(list.filepath ,modelInfo.filepath) == 0)
 		{
 			return;
 		}

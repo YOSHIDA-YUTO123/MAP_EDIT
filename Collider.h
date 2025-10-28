@@ -33,10 +33,12 @@ public:
 	// コライダーの種類
 	typedef enum
 	{
-		TYPE_AABB = 0, // 矩形
-		TYPE_SPHERE,   // 球
-		TYPE_FOV,	   // 視界
-		TYPE_CAPSULE,  // カプセル
+		TYPE_BASE = 0,	// 基底クラス
+		TYPE_AABB,		// 矩形
+		TYPE_SPHERE,	// 球
+		TYPE_FOV,		// 視界
+		TYPE_CAPSULE,	// カプセル
+		TYPE_OBB,		// 回転矩形
 		TYPE_MAX
 	}TYPE;
 
@@ -47,7 +49,7 @@ public:
 	// データ取得
 	virtual const void* GetData(void) const { return nullptr; }
 
-	virtual void Update(void) {};
+	virtual void Update(void);
 
 	CTransform* GetTransform(void) { return m_pTransform; }
 	void SetTransform(CTransform* pTransform) { m_pTransform = pTransform; }
@@ -56,10 +58,18 @@ public:
 	void DeleteTransform(void);
 	TYPE GetType(void) const { return m_type; }
 	const char* GetTag(void) const { return m_tag.c_str(); }
+
+	void SetResult(const bool bResult) { m_bHit = bResult; }
+protected:
+	D3DXCOLOR GetLineColor(void) const { return m_col; }
 private:
-	CTransform* m_pTransform; // トランスフォームクラスへのポインタ
-	std::string m_tag;		  // コライダーのタグ
-	TYPE m_type;			  // コライダーの種類
+	virtual void DrawLine(void) = 0;
+
+	CTransform* m_pTransform;	// トランスフォームクラスへのポインタ
+	std::string m_tag;			// コライダーのタグ
+	TYPE m_type;				// コライダーの種類
+	D3DXCOLOR m_col;			// 色
+	bool m_bHit;				// 当たったかどうか
 };
 
 //************************************************
@@ -76,7 +86,9 @@ public:
 
 	static std::unique_ptr<CColliderAABB> Create(const D3DXVECTOR3 pos, const D3DXVECTOR3 posOld, const D3DXVECTOR3 Size);
 	static CColliderAABB CreateCollider(const D3DXVECTOR3 pos, const D3DXVECTOR3 posOld, const D3DXVECTOR3 Size);
+	static CColliderAABB* Create(void);
 private:
+	void DrawLine(void) override;
 };
 
 //************************************************
@@ -95,6 +107,7 @@ public:
 	static CColliderSphere* CreateRawPtr(const D3DXVECTOR3 pos, const float fRadius, CTransform* pTransform);
 	static CColliderSphere CreateCollider(const D3DXVECTOR3 pos, const float fRadius);
 private:
+	void DrawLine(void) override;
 };
 
 //************************************************
@@ -114,12 +127,15 @@ public:
 
 	CColliderFOV();
 	~CColliderFOV();
-	static std::unique_ptr<CColliderFOV> Create(const D3DXVECTOR3 pos,const float fAngle, const float fAngleLeft, const float fAngleRight,const float fLength);
+	static std::unique_ptr<CColliderFOV> Create(const float fAngle, const float fAngleLeft, const float fAngleRight,const float fLength);
+	static CColliderFOV* CreateRawPtr(const float fAngle, const float fAngleLeft, const float fAngleRight, const float fLength);
+
 	static CColliderFOV CreateCollider(const D3DXVECTOR3 pos, const float fAngle, const float fAngleLeft, const float fAngleRight, const float fLength);
 	const void* GetData(void) const override { return &m_Data; }
 	void Update(void) override;
 
 private:
+	void DrawLine(void) override;
 	Data m_Data; // データ
 };
 
@@ -142,13 +158,32 @@ public:
 	~CColliderCapsule();
 
 	static std::unique_ptr<CColliderCapsule> Create(const D3DXVECTOR3 StartPos, const D3DXVECTOR3 EndPos, const float fRadius);
+	static CColliderCapsule* CreateRawPtr(const D3DXVECTOR3 StartPos, const D3DXVECTOR3 EndPos);
 	static CColliderCapsule CreateCollider(const D3DXVECTOR3 StartPos, const D3DXVECTOR3 EndPos, const float fRadius);
 	const void* GetData(void) const override { return &m_Data; }
 	void Update(void) override;
 
 private:
+	void DrawLine(void) override;
 	Data m_Data;			  // データ
 	D3DXVECTOR3 m_LocalStart; // 始点の位置
 	D3DXVECTOR3 m_LocalEnd;	  // 終点の位置
+};
+
+//************************************************
+// OBBクラスの定義
+//************************************************
+class CColliderOBB : public CCollider
+{
+public:
+
+	CColliderOBB();
+	~CColliderOBB();
+
+	static CColliderOBB* Create(void);
+	const void* GetData(void) const override { return nullptr; }
+	void Update(void) override;
+private:
+	void DrawLine(void) override;
 };
 #endif
