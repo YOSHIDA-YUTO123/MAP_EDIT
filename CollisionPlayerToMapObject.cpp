@@ -48,20 +48,22 @@ void CCollisionPlayerToMapObject::Init(void)
 //==============================================
 void CCollisionPlayerToMapObject::Update(void)
 {
-	bool bResult = false;
+	/*ここヤバイ修正*/
 
-	// マップオブジェクトのマネージャーの取得
-	CMapObjectManager *pMapObjectManager = CMapObjectManager::GetInstance();
+	////bool bResult = false;
 
-	// マップオブジェクトのコライダー分調べる
-	for (auto& mapObject : pMapObjectManager->GetList())
-	{
-		// 当たり判定
-		bResult = Collision(mapObject);
-	}
+	////// マップオブジェクトのマネージャーの取得
+	////CMapObjectManager *pMapObjectManager = CMapObjectManager::GetInstance();
 
-	// 判定結果の設定
-	SetResult(bResult);
+	////// マップオブジェクトのコライダー分調べる
+	////for (auto& mapObject : pMapObjectManager->GetList())
+	////{
+	////	// 当たり判定
+	////	bResult = Collision(mapObject);
+	////}
+
+	////// 判定結果の設定
+	////SetResult(bResult);
 }
 
 //==============================================

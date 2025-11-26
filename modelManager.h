@@ -38,7 +38,7 @@ public:
 	~CModelManager();
 
 	int Register(const char* pFilename);
-	ModelInfo GetModelInfo(const int nIdx);
+	ModelInfo &GetModelInfo(const int nIdx);
 	std::vector<ModelInfo>& GetList(void) { return m_apModelInfo; }
 	HRESULT Load(void);
 	void UnLoad(void);

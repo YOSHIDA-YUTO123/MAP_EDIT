@@ -43,7 +43,7 @@ public:
 private:
 	CLineRenderer();
 
-	static constexpr int NUM_VERTEX = 500;	// 頂点の総数
+	static constexpr int NUM_VERTEX = 25600;	// 頂点の総数
 
 	static CLineRenderer* m_pInstance;		// 自分のインスタンス
 	LPDIRECT3DVERTEXBUFFER9 m_pVtxBuffer;	// 頂点バッファへのポインタ

@@ -179,7 +179,7 @@ void CMapObject::Update(void)
 	CModelManager* pModelManager = CManager::GetModel();
 
 	// ƒ‚ƒfƒ‹‚Ìî•ñ‚ÌŽæ“¾
-	CModelManager::ModelInfo modelInfo = pModelManager->GetModelInfo(m_nModelIdx);
+	CModelManager::ModelInfo& modelInfo = pModelManager->GetModelInfo(m_nModelIdx);
 
 	info.Size = modelInfo.Size;
 

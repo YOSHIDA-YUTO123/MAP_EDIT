@@ -151,6 +151,8 @@ HRESULT CManager::Init(HINSTANCE hInstance,HWND hWnd, BOOL bWindow)
 
 	Load();
 
+	//m_pSystem.clear();
+
 	// 結果を返す
 	return S_OK;
 }
@@ -297,8 +299,11 @@ void CManager::Update(void)
 
 	for (auto& system : m_pSystem)
 	{
-		// 更新処理
-		system->Update();
+		if (system != nullptr)
+		{
+			// 更新処理
+			system->Update();
+		}
 	}
 
 	if (m_pRenderer != nullptr)

@@ -228,14 +228,6 @@ void CRenderer::Draw(const int fps)
 		// ImGui‚Ì•`‰æI—¹
 		m_pImGui->EndRenderer();		
 
-#ifdef _DEBUG
-		CDebugProc::Print("FPS = %d\n", fps);
-
-		//CDebugProc::Draw();
-#endif // _DEBUG
-
-		CDebugProc::Reset();
-
 		// •`‰æI—¹
 		m_pD3DDevice->EndScene();
 	}

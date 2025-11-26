@@ -71,7 +71,7 @@ int CModelManager::Register(const char* pFilename)
 	if (nIdx == -1)
 	{
 		// モデルの情報
-		ModelInfo info = {};
+		ModelInfo info;
 
 		////Xファイルの読み込み
 		if (FAILED(D3DXLoadMeshFromX(pFilename,
@@ -99,7 +99,7 @@ int CModelManager::Register(const char* pFilename)
 		SetMaterial(&info);
 
 		// 要素の設定
-		m_apModelInfo.push_back(info);
+		m_apModelInfo.push_back(std::move(info));
 
 		// インデックスの番号を返す
 		nIdx = m_nNumAll;
@@ -113,21 +113,23 @@ int CModelManager::Register(const char* pFilename)
 //==============================================
 // モデルの情報の取得
 //==============================================
-CModelManager::ModelInfo CModelManager::GetModelInfo(const int nIdx)
+CModelManager::ModelInfo &CModelManager::GetModelInfo(const int nIdx)
 {
 	// モデルの数
 	int nNumModel = static_cast<int>(m_apModelInfo.size());
 
+	static ModelInfo out = {};
+
 	if (m_apModelInfo.empty())
 	{
 		MessageBox(NULL, "モデルが読み込まれていません", "モデルを登録してください",MB_OK);
-		return ModelInfo();
+		return out;
 	}
 
 	if (nIdx < 0 || nIdx >= nNumModel)
 	{
 		assert(false && "インデックスオーバーModelInfo");
-		return ModelInfo();
+		return out;
 	}
 
 	return m_apModelInfo[nIdx];
@@ -253,7 +255,7 @@ void CModelManager::SetMaterial(ModelInfo* pModelInfo)
 		// ファイル名を使用してテクスチャを読み込む
 		nTextureIdx = pTextureManager->Register(pMat[nCnt].pTextureFilename);
 
-		pModelInfo->nTextureIdx.push_back(nTextureIdx);
+		pModelInfo->nTextureIdx.push_back(std::move(nTextureIdx));
 	}
 }
 
@@ -318,6 +320,8 @@ HRESULT CModelManager::Load(void)
 	ifstream file(JSON_FILE);
 
 	json config;
+
+	m_apModelInfo.reserve(500);
 
 	if (file.is_open())
 	{
